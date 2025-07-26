@@ -1,16 +1,27 @@
 'use client';
-
+import { Libre_Baskerville} from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+  // 配置字体
+const libreBaskerville = Libre_Baskerville({
+  weight: ['400', '700'], // 需要的字重
+  style: ['normal', 'italic'], // 需要的样式
+  subsets: ['latin'], // 语言子集
+  display: 'swap', // 确保文本在字体加载时可见
+});
+
 export default function HomePage() {
+
   const [feedback, setFeedback] = useState({
     email: "",
     context: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -126,7 +137,7 @@ export default function HomePage() {
           }}
         >
           <div style={{ fontSize: "32px", marginBottom: "8px" }}>NewZotero</div>
-          <div style={{ fontSize: "18px", opacity: 0.8 }}>v1.22 知识库管理助手</div>
+          <div style={{ fontSize: "18px", opacity: 0.8 }}>v0.1.22 知识库管理助手</div>
         </div>
 
         {/* 主标题区域 */}
@@ -137,11 +148,12 @@ export default function HomePage() {
             left: "10%",
             transform: "translateY(-50%)",
             color: "#fff",
-            maxWidth: "700px",
+            maxWidth: "1500px",
             zIndex: 1,
           }}
         >
           <div
+            className={libreBaskerville.className}
             style={{
               fontSize: "clamp(36px, 6vw, 64px)",
               fontWeight: "bold",
@@ -149,17 +161,20 @@ export default function HomePage() {
               marginBottom: "20px",
             }}
           >
-            Empower your next Academic Journey With AI
+              <div style={{ paddingLeft: "40px" }}>Empower</div>
+              your next <br />
+              <div style={{ paddingLeft: "40px" }}>Academic Journey</div>
+              With AI
           </div>
           <div
             style={{
               fontSize: "clamp(16px, 2vw, 20px)",
               opacity: 0.9,
               lineHeight: "1.6",
-              maxWidth: "600px",
+              maxWidth: "700px",
             }}
           >
-            革命性的知识管理工具，结合人工智能技术，帮助研究人员高效整理、分析和应用学术资源。
+            <div style={{ paddingLeft: "42px" }}>革命性的知识管理工具，结合人工智能技术，</div>帮助研究人员高效整理、分析和应用学术资源。
           </div>
         </div>
 
@@ -168,8 +183,8 @@ export default function HomePage() {
           <button
             style={{
               position: "absolute",
-              top: "40px",
-              right: "40px",
+              top: "10%",
+              right: "5%",
               background: "rgba(255, 255, 255, 0.2)",
               color: "#fff",
               border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -201,7 +216,7 @@ export default function HomePage() {
             style={{
               position: "absolute",
               bottom: "40px",
-              right: "40px",
+              right: "5%",
               background: "rgba(255, 255, 255, 0.2)",
               color: "#fff",
               border: "1px solid rgba(255, 255, 255, 0.2)",
