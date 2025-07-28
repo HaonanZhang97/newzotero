@@ -1,7 +1,7 @@
 let notes = [
     // 示例
-    { id: 101, fileId: 0, content: "这是一个测试摘录", createdAt: "2025-07-27T12:00:00Z" },
-    { id: 102, fileId: 0, content: "这是另一个测试摘录", createdAt: "2025-07-28T12:00:00Z" }
+    { id: 101, fileId: 0, content: "这是一个测试摘录", createdAt: "2025-07-27T12:00:00Z", type: "abstract" },
+    { id: 102, fileId: 0, content: "这是另一个测试摘录", createdAt: "2025-07-28T12:00:00Z", type: "abstract" }
 ];
 
 export async function GET(req) {

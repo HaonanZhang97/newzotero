@@ -80,7 +80,8 @@ export default function LibraryPage() {
       id: Date.now() + Math.random(),
       fileId: file.id,
       content: abstractEntries.content,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      type: "abstract"
     };
     // 1. 本地更新
     setNotes(prev => [...prev, newNote]);
@@ -128,19 +129,19 @@ export default function LibraryPage() {
   const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files).filter(
       (file) =>
-        file.name.toLowerCase().endsWith(".pdf") ||
-        file.name.toLowerCase().endsWith(".docx")
+        file.title.toLowerCase().endsWith(".pdf") ||
+        file.title.toLowerCase().endsWith(".docx")
     );
     for (const file of selectedFiles) {
       const res = await fetch('/api/parse_pdf', {
         method: 'POST',
-        body: JSON.stringify({ name: file.name }),
+        body: JSON.stringify({ title: file.title }),
         headers: { 'Content-Type': 'application/json' }
       });
       const meta = await res.json();
       const newFile = {
-        id: Date.now() + Math.random() + file.name,
-        name: file.name,
+        id: Date.now() + Math.random() + file.title,
+        title: file.title,
         meta: { ...meta, type: 'pdf' },
         notes: []
       };
@@ -230,7 +231,7 @@ export default function LibraryPage() {
       const data = await response.json();
       const newFile = {
         id: Date.now() + Math.random() + doi,
-        name: data.message.title[0] || "DOI文献",
+        title: data.message.title[0] || "DOI文献",
         meta: {
           title: data.message.title[0] || "",
           author: data.message.author
@@ -299,6 +300,43 @@ export default function LibraryPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newNote)
+    });
+  };
+
+  const handleManualAddFile = async () => {
+    if (!abstractEntries.title.trim()) return;
+    const fileId = Date.now() + Math.random()
+    const newNote = {
+      id: Date.now() + Math.random(),
+      fileId: fileId,
+      content: abstractEntries.content,
+      createdAt: new Date().toISOString()
+    };
+    const newFile = {
+      id: fileId,
+      title: abstractEntries.title,
+      meta: { ...abstractEntries, type: "manual" },
+      notes: [newNote]
+    };
+    await fetch('/api/files', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newFile)
+    });
+    await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newNote)
+    });
+    setFiles(prev => {
+      const updated = [...prev, newFile];
+      setSelectedFileIndex(updated.length - 1);
+      setAbstractEntries({
+        ...newFile.meta,
+        content: "",
+      });
+      setNotes([newNote]);
+      return updated;
     });
   };
 
@@ -417,6 +455,7 @@ export default function LibraryPage() {
                   background: "#fafafa",
                   transition: "border-color 0.2s",
                   overflowY: "auto",
+                  flex: "1 1 auto"
                 }}
               >
                 <button
@@ -436,6 +475,34 @@ export default function LibraryPage() {
                 >
                   导入文件
                 </button>
+                <div
+                  onClick={() => {
+                    setSelectedFileIndex("manual");
+                    setAbstractEntries({
+                      title: "",
+                      author: "",
+                      date: "",
+                      page: "",
+                      content: "",
+                    });
+                    setNotes([]);
+                  }}
+                  style={{
+                    background: selectedFileIndex === "manual" ? "#e0eaff" : "#f5f5f5",
+                    border: selectedFileIndex === "manual" ? "2px solid #1976d2" : "none",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    marginBottom: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    width: "90%",
+                    cursor: "pointer",
+                    position: "relative",
+                  }}>
+                  <Image src="/file_icon.svg" alt="icon" width={36} height={36} />
+                  + 手动添加文件
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -452,7 +519,7 @@ export default function LibraryPage() {
                 ) : (
                   files.map((file, idx) => (
                     <div
-                      key={file.name + idx}
+                      key={file.title + idx}
                       onClick={() => handleSelectFile(idx)}
                       style={{
                         background: selectedFileIndex === idx ? "#e0eaff" : "#f5f5f5", // 高亮背景
@@ -468,9 +535,9 @@ export default function LibraryPage() {
                         position: "relative",
                       }}
                     >
-                      <Image src={getIcon(file.name)} alt="icon" width={36} height={36} />
+                      <Image src={getIcon(file.title)} alt="icon" width={36} height={36} />
                       <span style={{ fontSize: "15px", color: "#222", wordBreak: "break-all" }}>
-                        {file.name}
+                        {file.title}
                       </span>
                       <button
                         onClick={e => {
@@ -497,7 +564,7 @@ export default function LibraryPage() {
                   ))
                 )}
               </div>
-              <div style={{ color: "#828282", fontSize: "18px", marginTop: "72px", width: "90%" }}>
+              <div style={{ color: "#828282", fontSize: "18px", width: "90%" }}>
                 使用说明：可以为每一个单体条文存储原始的文件（pdf或doc格式均可），单独记录摘要内容。<br />
                 <br />
                 推荐内容带有 “Free Writing” 一起保存
@@ -729,7 +796,13 @@ export default function LibraryPage() {
                     textAlign: "left",
                   }}
                   onKeyDown={e => {
-                    if (e.ctrlKey && e.key === "Enter") handleAddNote();
+                    if (e.ctrlKey && e.key === "Enter") {
+                      if (selectedFileIndex === "manual") {
+                        handleManualAddFile();
+                      } else {
+                        handleAddNote();
+                      }
+                    }
                   }}
                 />
                 <div style={{
