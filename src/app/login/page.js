@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 
+
 export default function LoginPage() {
 
   const [userID, setUserID] = useState("");
@@ -44,7 +45,7 @@ export default function LoginPage() {
       } catch (error) {
         if (!ignore) setCheckResult("检查ID时出错，请稍后再试");
         setfoundError(true);
-      } 
+      }
     };
     checkUser();
     return () => { ignore = true; };
@@ -65,7 +66,7 @@ export default function LoginPage() {
       }}
     >
       {/* 顶部标题 */}
-      <Link href= "/"> 
+      <Link href="/">
         <div
           href="/"
           style={{
@@ -134,7 +135,7 @@ export default function LoginPage() {
             <div style={{ color: "#888", fontSize: "15px", marginBottom: "18px" }}>
               {checkResult}
             </div>
-            <Link href="/library" style={{ textDecoration: "none" }}> 
+            <Link href="/library" style={{ textDecoration: "none" }}>
               <button
                 style={{
                   width: "100%",

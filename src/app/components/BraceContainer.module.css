@@ -1,0 +1,134 @@
+.brace-component {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: none;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.brace-container {
+    display: flex;
+    align-items: stretch;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+.brace {
+    width: 32px;
+    min-width: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* 让大括号高度随内容变化 */
+    height: var(--brace-height, 100%);
+    position: relative;
+    z-index: 1;
+}
+
+.brace-top,
+.brace-bottom {
+    width: 100%;
+    height: 32px;
+    position: relative;
+}
+
+.brace-top::before,
+.brace-bottom::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 32px;
+    border-left: 4px solid #bdbdbd;
+    border-top: 4px solid #bdbdbd;
+    border-radius: 0 0 0 24px;
+    position: absolute;
+    left: 4px;
+    top: 0;
+}
+
+.brace-bottom::before {
+    border-top: none;
+    border-bottom: 4px solid #bdbdbd;
+    border-radius: 0 0 24px 0;
+    top: auto;
+    bottom: 0;
+}
+
+.brace-middle {
+    flex: 1;
+    width: 100%;
+    border-left: 4px solid #bdbdbd;
+}
+
+.content-container {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 16px 24px 8px;
+    background: #fafafa;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+.entry-item {
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.entry-icon {
+    font-size: 22px;
+    margin-top: 2px;
+}
+
+.entry-details {
+    flex: 1;
+}
+
+.entry-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+}
+
+.entry-description {
+    color: #888;
+    font-size: 13px;
+    margin: 0 0 4px 0;
+}
+
+.entry-meta {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.expand-button {
+    margin: 0 auto 8px auto;
+    display: block;
+    background: none;
+    border: none;
+    color: #1976d2;
+    font-size: 15px;
+    cursor: pointer;
+    outline: none;
+    transition: color 0.2s;
+}
+
+.expand-button:hover {
+    color: #0d47a1;
+}
+
+.arrow {
+    margin-left: 4px;
+}

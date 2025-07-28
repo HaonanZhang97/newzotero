@@ -1,10 +1,10 @@
 'use client';
-import { Libre_Baskerville} from "next/font/google";
+import { Libre_Baskerville } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-  // 配置字体
+// 配置字体
 const libreBaskerville = Libre_Baskerville({
   weight: ['400', '700'], // 需要的字重
   style: ['normal', 'italic'], // 需要的样式
@@ -36,7 +36,7 @@ export default function HomePage() {
     setSubmitted(true);
     setSubmitResult(null);
 
-    try{
+    try {
       const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
@@ -46,27 +46,27 @@ export default function HomePage() {
       });
       const result = await res.json();
       if (res.ok) {
-          setSubmitResult({
-            type: "success",
-            message: result.message || "反馈已提交，我们将尽快回复您！",
-          });
-          setFeedback({ email: "", context: "" });
-        } else {
-          setSubmitResult({
-            type: "error",
-            message: result.error || "提交失败，请稍后再试",
-            details: result.details,
-          });
-        }
-      } catch (error) {
+        setSubmitResult({
+          type: "success",
+          message: result.message || "反馈已提交，我们将尽快回复您！",
+        });
+        setFeedback({ email: "", context: "" });
+      } else {
         setSubmitResult({
           type: "error",
-          message: "网络错误，请检查您的连接",
-          details: error.message,
+          message: result.error || "提交失败，请稍后再试",
+          details: result.details,
         });
-      } finally {
-        setSubmitted(false);
       }
+    } catch (error) {
+      setSubmitResult({
+        type: "error",
+        message: "网络错误，请检查您的连接",
+        details: error.message,
+      });
+    } finally {
+      setSubmitted(false);
+    }
 
   };
 
@@ -161,10 +161,10 @@ export default function HomePage() {
               marginBottom: "20px",
             }}
           >
-              <div style={{ paddingLeft: "40px" }}>Empower</div>
-              your next <br />
-              <div style={{ paddingLeft: "40px" }}>Academic Journey</div>
-              With AI
+            <div style={{ paddingLeft: "40px" }}>Empower</div>
+            your next <br />
+            <div style={{ paddingLeft: "40px" }}>Academic Journey</div>
+            With AI
           </div>
           <div
             style={{
@@ -236,7 +236,7 @@ export default function HomePage() {
               e.target.style.transform = "translateX(5px)";
             }}
             onMouseLeave={(e) => {
-              e.target.style.background ="rgba(255, 255, 255, 0.2)";
+              e.target.style.background = "rgba(255, 255, 255, 0.2)";
               e.target.style.transform = "translateX(0)";
             }}
           >

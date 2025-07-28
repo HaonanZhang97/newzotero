@@ -8,7 +8,7 @@ export async function POST(req) {
     }
 
     // 转发到 Flask 后端
-    const flaskRes = await fetch("http://localhost:5000/api/check_user", {
+    const flaskRes = await fetch(process.env.SERVER_URL + "/api/check_user", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

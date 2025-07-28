@@ -17,7 +17,7 @@ export async function POST(req) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_RECIPIENT,
-      subject: 'New Feedback from NewZotero ' + " ' "+ email + " ' ",
+      subject: 'New Feedback from NewZotero ' + " ' " + email + " ' ",
       text: context,
     };
 
