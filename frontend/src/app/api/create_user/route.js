@@ -1,3 +1,5 @@
+const SERVER_URL = process.env.SERVER_URL?.trim().replace(/\/$/, "") || "http://localhost:5000";
+
 export async function POST(req) {
     try {
         // 读取前端传来的 form-data
@@ -8,7 +10,7 @@ export async function POST(req) {
         }
 
         // 转发到 Flask 后端
-        const flaskRes = await fetch(process.env.SERVER_URL + "/api/create_user", {
+        const flaskRes = await fetch(SERVER_URL + "/api/create_user", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
