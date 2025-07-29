@@ -171,7 +171,7 @@ export default function NoteBrowsePage() {
               <select
                 onChange={e => setResultsPerPage(e.target.value)}
                 style={{
-                  width: "3vw",
+                  width: "8vw",
                   padding: "12px 16px",
                   fontSize: "24px",
                   border: "none",

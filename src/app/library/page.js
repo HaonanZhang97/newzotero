@@ -19,6 +19,7 @@ export default function LibraryPage() {
     page: "",
     content: "",
   });
+  const [noteExpandedMap, setNoteExpandedMap] = useState({});
   const [freeNoteContent, setFreeNoteContent] = useState("");
   const [doi, setDoi] = useState("");
   const [doiError, setDoiError] = useState("");
@@ -62,10 +63,19 @@ export default function LibraryPage() {
             ...data[0].meta,
             content: "",
           });
-          // 加载所有 notes（不带 fileId，拿到所有 free 和 abstract）
+          // 先加载自由笔记
           fetch(`/api/notes?username=${encodeURIComponent(username)}`)
             .then(res => res.json())
-            .then(notesData => setNotes(notesData || []));
+            .then(allNotes => {
+              const freeNotes = (allNotes || []).filter(n => n.type === "free");
+              // 再加载第一个文件的摘录笔记
+              return fetch(`/api/notes?fileId=${data[0].id}&username=${encodeURIComponent(username)}`)
+                .then(res => res.json())
+                .then(fileNotes => {
+                  const abstractNotes = (fileNotes || []).filter(n => n.type !== "free");
+                  setNotes([...freeNotes, ...abstractNotes]);
+                });
+            });
         }
       });
   }, [username]);
@@ -287,7 +297,8 @@ export default function LibraryPage() {
       ...files[idx].meta,
       content: "",
     });
-    fetch(`/api/notes?fileId=${files[idx].id}&username=${encodeURIComponent(username)}`) // ★加 username
+    setNoteExpanded(false);
+    fetch(`/api/notes?fileId=${files[idx].id}&username=${encodeURIComponent(username)}`)
       .then(res => res.json())
       .then(notesData => {
         setNotes(prevNotes => {
@@ -358,6 +369,7 @@ export default function LibraryPage() {
     return `${meta.author}. (${meta.date.slice(0, 10)}). ${meta.title}`;
   }
 
+  const currentFileId = files[selectedFileIndex]?.id;
   return (
     <div
       style={{
@@ -497,7 +509,7 @@ export default function LibraryPage() {
                       page: "",
                       content: "",
                     });
-                    setNotes([]);
+                    setNotes(prevNotes => prevNotes.filter(n => n.type === "free"));
                   }}
                   style={{
                     background: selectedFileIndex === "manual" ? "#e0eaff" : "#f5f5f5",
@@ -843,7 +855,10 @@ export default function LibraryPage() {
                 }}
               >
                 {notes.length === 0 && <div style={{ color: "#bbb" }}>暂无摘录</div>}
-                {(noteExpanded ? notes.filter(n => n.type !== "free") : notes.filter(n => n.type !== "free").slice(0, 1)).map(note => (
+                {(noteExpandedMap[currentFileId]
+                  ? notes.filter(n => n.type !== "free")
+                  : notes.filter(n => n.type !== "free").slice(0, 1)
+                ).map(note => (
                   <div
                     key={note.id}
                     style={{
@@ -883,16 +898,18 @@ export default function LibraryPage() {
                   <div style={{ textAlign: "center", marginTop: 8 }}>
                     <button
                       style={{ border: "none", background: "none", color: "#000", cursor: "pointer", fontSize: 14 }}
-                      onClick={() => setNoteExpanded(e => !e)}
+                      onClick={() => setNoteExpandedMap(map => ({
+                        ...map,
+                        [currentFileId]: !map[currentFileId]
+                      }))}
                     >
-                      {noteExpanded ? "收起" : "展开"}
-                      <span style={{ marginLeft: 4 }}>{noteExpanded ? "▲" : "▼"}</span>
+                      {noteExpandedMap[currentFileId] ? "收起" : "展开"}
+                      <span style={{ marginLeft: 4 }}>{noteExpandedMap[currentFileId] ? "▲" : "▼"}</span>
                     </button>
                   </div>
                 )}
               </div>
             </div>
-
           </div>
         </div>
         {/* 下半部分：自由笔记区 */}
