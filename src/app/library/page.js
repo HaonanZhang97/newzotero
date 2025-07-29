@@ -124,19 +124,65 @@ export default function LibraryPage() {
   };
 
   // 拖拽上传
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    alert("文件上传功能还在开发中");
-    return;
-    // const droppedFiles = Array.from(e.dataTransfer.files).filter(
-    //   (file) =>
-    //     file.name.toLowerCase().endsWith(".pdf") ||
-    //     file.name.toLowerCase().endsWith(".docx")
-    // );
-    // if (droppedFiles.length > 0) {
-    //   setFiles((prev) => [...prev, ...droppedFiles]);
-    // }
+
+    const droppedFiles = Array.from(e.dataTransfer.files).filter(
+      (file) =>
+        file.name.toLowerCase().endsWith(".pdf") ||
+        file.name.toLowerCase().endsWith(".docx") ||
+        file.name.toLowerCase().endsWith(".doc")
+    );
+
+    if (droppedFiles.length === 0) {
+      alert("请拖拽 PDF 或 Word 文档文件");
+      return;
+    }
+
+    for (const file of droppedFiles) {
+      try {
+        // 创建 FormData 对象
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('username', username);
+
+        // 调用前端API上传文件
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`上传失败: ${error.error || '未知错误'}`);
+          continue;
+        }
+
+        const result = await response.json();
+
+        // 重新加载文件列表
+        const filesResponse = await fetch(`/api/files?username=${encodeURIComponent(username)}`);
+        const updatedFiles = await filesResponse.json();
+        setFiles(updatedFiles || []);
+
+        // 选中新上传的文件
+        const newFileIndex = updatedFiles.findIndex(f => f.id === result.fileId);
+        if (newFileIndex >= 0) {
+          setSelectedFileIndex(newFileIndex);
+          setAbstractEntries({
+            ...updatedFiles[newFileIndex].meta,
+            content: "",
+          });
+          setNotes(prevNotes => prevNotes.filter(n => n.type === "free"));
+        }
+
+        alert(`文件 "${file.name}" 上传成功！`);
+      } catch (error) {
+        console.error('上传文件时出错:', error);
+        alert(`上传文件 "${file.name}" 失败，请重试`);
+      }
+    }
   };
 
   const handleDragOver = (e) => {
@@ -146,87 +192,129 @@ export default function LibraryPage() {
 
   // 点击上传
   const handleFileChange = async (e) => {
-    // const selectedFiles = Array.from(e.target.files).filter(
-    //   (file) =>
-    //     file.name.toLowerCase().endsWith(".pdf") ||
-    //     file.name.toLowerCase().endsWith(".docx")
-    // );
-    // for (const file of selectedFiles) {
-    //   const res = await fetch('/api/parse_pdf', {
-    //     method: 'POST',
-    //     body: JSON.stringify({ title: file.name }),
-    //     headers: { 'Content-Type': 'application/json' }
-    //   });
-    //   const meta = await res.json();
-    //   const newFile = {
-    //     id: Date.now() + Math.random() + file.name.replace(/[\/\\]/g, "_"),
-    //     title: file.name,
-    //     meta: { ...meta, type: 'pdf' },
-    //     notes: []
-    //   };
-    //   // 同步到后端
-    //   await fetch('/api/files', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ ...newFile, username })
-    //   });
-    //   setFiles(prev => {
-    //     const updated = [...prev, newFile];
-    //     setSelectedFileIndex(updated.length - 1);
-    //     setAbstractEntries({
-    //       ...newFile.meta,
-    //       content: "",
-    //     });
-    //     setNotes([]);
-    //     return updated;
-    //   });
-    // }
-    // e.target.value = "";
-    alert("文件上传功能还在开发中");
-    return;
+    const selectedFiles = Array.from(e.target.files).filter(
+      (file) =>
+        file.name.toLowerCase().endsWith(".pdf") ||
+        file.name.toLowerCase().endsWith(".docx") ||
+        file.name.toLowerCase().endsWith(".doc")
+    );
+
+    if (selectedFiles.length === 0) {
+      alert("请选择 PDF 或 Word 文档文件");
+      return;
+    }
+
+    for (const file of selectedFiles) {
+      try {
+        // 创建 FormData 对象
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('username', username);
+
+        // 调用前端API上传文件
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`上传失败: ${error.error || '未知错误'}`);
+          continue;
+        }
+
+        const result = await response.json();
+
+        // 重新加载文件列表
+        const filesResponse = await fetch(`/api/files?username=${encodeURIComponent(username)}`);
+        const updatedFiles = await filesResponse.json();
+        setFiles(updatedFiles || []);
+
+        // 选中新上传的文件
+        const newFileIndex = updatedFiles.findIndex(f => f.id === result.fileId);
+        if (newFileIndex >= 0) {
+          setSelectedFileIndex(newFileIndex);
+          setAbstractEntries({
+            ...updatedFiles[newFileIndex].meta,
+            content: "",
+          });
+          setNotes(prevNotes => prevNotes.filter(n => n.type === "free"));
+        }
+
+        alert(`文件 "${file.name}" 上传成功！`);
+      } catch (error) {
+        console.error('上传文件时出错:', error);
+        alert(`上传文件 "${file.name}" 失败，请重试`);
+      }
+    }
+
+    e.target.value = "";
   };
+
 
   // 删除文件
   const handleDelete = async (idx) => {
     const fileToDelete = files[idx];
-    // 1. 删除文件
-    await fetch('/api/files', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: fileToDelete.id, username })
-    });
-    // 2. 删除该文件的所有notes
-    await fetch('/api/notes', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileId: fileToDelete.id, username }) // ★加 username
-    });
-    // 3. 本地更新
-    const newFiles = files.filter((_, i) => i !== idx);
-    setFiles(newFiles);
 
-    // 4. 如果还有文件，切换到第一个文件并加载其notes
-    if (newFiles.length > 0) {
-      setSelectedFileIndex(0);
-      setAbstractEntries({
-        ...newFiles[0].meta,
-        content: "",
+    try {
+      // 对于已上传的文件，使用新的删除API
+      if (fileToDelete.meta && fileToDelete.meta.downloadable) {
+        const response = await fetch(`/api/files/delete/${fileToDelete.id}?username=${encodeURIComponent(username)}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`删除失败: ${error.error || '未知错误'}`);
+          return;
+        }
+      } else {
+        // 对于其他文件，使用原有的删除逻辑
+        await fetch('/api/files', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: fileToDelete.id, username })
+        });
+      }
+
+      // 删除该文件的所有notes
+      await fetch('/api/notes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileId: fileToDelete.id, username })
       });
-      // 加载新文件的notes
-      fetch(`/api/notes?fileId=${newFiles[0].id}&username=${encodeURIComponent(username)}`)
-        .then(res => res.json())
-        .then(notesData => setNotes(notesData || []));
-    } else {
-      // 没有文件了，清空内容
-      setSelectedFileIndex(null);
-      setAbstractEntries({
-        title: "",
-        author: "",
-        date: "",
-        page: "",
-        content: "",
-      });
-      setNotes([]);
+
+      // 本地更新
+      const newFiles = files.filter((_, i) => i !== idx);
+      setFiles(newFiles);
+
+      // 如果还有文件，切换到第一个文件并加载其notes
+      if (newFiles.length > 0) {
+        setSelectedFileIndex(0);
+        setAbstractEntries({
+          ...newFiles[0].meta,
+          content: "",
+        });
+        // 加载新文件的notes
+        fetch(`/api/notes?fileId=${newFiles[0].id}&username=${encodeURIComponent(username)}`)
+          .then(res => res.json())
+          .then(notesData => setNotes(notesData || []));
+      } else {
+        // 没有文件了，清空内容
+        setSelectedFileIndex(null);
+        setAbstractEntries({
+          title: "",
+          author: "",
+          date: "",
+          page: "",
+          content: "",
+        });
+        setNotes([]);
+      }
+    } catch (error) {
+      console.error('删除文件时出错:', error);
+      alert('删除文件失败，请重试');
     }
   };
 
@@ -560,7 +648,7 @@ export default function LibraryPage() {
                       }}
                     >
                       <Image src={getIcon(file.title)} alt="icon" width={36} height={36} />
-                      <span style={{ fontSize: "15px", color: "#222", wordBreak: "break-all" }}>
+                      <span style={{ fontSize: "15px", color: "#222", wordBreak: "break-all", flex: 1 }}>
                         {file.title}
                       </span>
                       <button

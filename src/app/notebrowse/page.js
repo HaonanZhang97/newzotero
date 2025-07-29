@@ -19,6 +19,37 @@ export default function NoteBrowsePage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
+  // 下载文件
+  const handleDownload = async (fileId, fileName) => {
+    try {
+      const username = typeof window !== "undefined" ? localStorage.getItem("username") : "";
+      const response = await fetch(`/api/download/${fileId}?username=${encodeURIComponent(username)}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`下载失败: ${error.error || '未知错误'}`);
+        return;
+      }
+
+      // 创建下载链接
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('下载文件时出错:', error);
+      alert('下载文件失败，请重试');
+    }
+  };
+
   console.log(resultsPerPage, 'resultsPerPage');
 
   const handleSearch = async () => {
@@ -241,6 +272,27 @@ export default function NoteBrowsePage() {
                       <div style={{ marginBottom: "8px" }}><b>作者：</b>{item.author}</div>
                       <div style={{ marginBottom: "8px" }}><b>发表日期：</b>{item.date}</div>
                       <div style={{ marginBottom: "8px" }}><b>相似度评分：</b>{item.score}</div>
+                      {/* 下载按钮（仅对可下载文件显示） */}
+                      {item.fileDownloadable && item.fileId && (
+                        <div style={{ marginTop: "12px" }}>
+                          <button
+                            onClick={() => handleDownload(item.fileId, item.fileTitle)}
+                            style={{
+                              background: "#4caf50",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              padding: "8px 16px",
+                              fontSize: "14px",
+                              cursor: "pointer",
+                              fontWeight: "bold",
+                            }}
+                            title="下载相关文件"
+                          >
+                            📄 下载文件
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
