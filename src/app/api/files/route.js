@@ -1,19 +1,33 @@
-let files = [
-    // 你可以预置一些测试数据
-    {
-        id: 0,
-        title: "测试文档.pdf",
-        meta: { title: "测试文档", author: "张三", date: "2025-07-27", page: "1-10", type: "pdf" },
+const SERVER_URL = process.env.SERVER_URL?.trim().replace(/\/$/, "") || "http://localhost:5000";
 
-    }
-];
-
-export async function GET() {
-    return Response.json(files);
+export async function GET(req) {
+    // 转发 GET 请求到 Flask 后端，拼接 query string
+    const url = SERVER_URL + "/api/files" + (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "");
+    const flaskRes = await fetch(url, { method: "GET" });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
 }
 
 export async function POST(req) {
-    const data = await req.json();
-    files.push(data);
-    return Response.json({ success: true });
+    // 转发 POST 请求到 Flask 后端
+    const body = await req.text();
+    const flaskRes = await fetch(SERVER_URL + "/api/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+    });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
+}
+
+export async function DELETE(req) {
+    // 转发 DELETE 请求到 Flask 后端
+    const body = await req.text();
+    const flaskRes = await fetch(SERVER_URL + "/api/files", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body,
+    });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
 }

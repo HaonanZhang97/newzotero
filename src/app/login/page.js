@@ -131,6 +131,7 @@ export default function LoginPage() {
                 outline: "none",
                 boxSizing: "border-box",
               }}
+              required
             />
             <div style={{ color: "#888", fontSize: "15px", marginBottom: "18px" }}>
               {checkResult}
@@ -150,6 +151,19 @@ export default function LoginPage() {
                   marginTop: "6px",
                   letterSpacing: "2px",
                   transition: "background 0.2s",
+                }}
+                onClick={async (e) => {
+                  if (!userID.trim()) {
+                    e.preventDefault();
+                    setCheckResult("❗请输入ID");
+                    return;
+                  }
+                  await fetch("/api/create_user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ username: userID }).toString(),
+                  });
+                  localStorage.setItem("username", userID);
                 }}
               >
                 登入！

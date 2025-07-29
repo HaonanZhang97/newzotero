@@ -13,11 +13,13 @@ const libreBaskerville = Libre_Baskerville({
 
 export default function NoteBrowsePage() {
 
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [resultsPerPage, setResultsPerPage] = useState(8);
+  const [resultsPerPage, setResultsPerPage] = useState("5");
   const [hasSearched, setHasSearched] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
+  console.log(resultsPerPage, 'resultsPerPage');
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -25,17 +27,22 @@ export default function NoteBrowsePage() {
     }
     setHasSearched(true);
 
+    const username = typeof window !== "undefined" ? localStorage.getItem("username") : "";
+
+    let resultsNum = resultsPerPage === "all" ? 100 : Number(resultsPerPage);
     try {
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: searchQuery,
-          resultsPerPage: resultsPerPage // 发送匹配数
+          resultsPerPage: resultsNum,
+          username // 加上用户名
         })
       });
       if (!res.ok) throw new Error('搜索失败');
       const data = await res.json();
+      console.log('搜索结果:', data);
       setSearchResults(data.results || []);
     } catch (err) {
       setSearchResults([]);
@@ -209,7 +216,7 @@ export default function NoteBrowsePage() {
                     style={{
                       display: "flex",
                       width: "100%",
-                      background: item.type === "abstract" ? "#fafafa" : "#cccccc",
+                      backgroundColor: item.type === "abstract" ? "#fafafa" : "#cccccc",
                       border: "1px solid #e0e0e0",
                       marginBottom: "24px",
                       boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
@@ -221,7 +228,7 @@ export default function NoteBrowsePage() {
                           :
                           `linear-gradient(to right, #a0a0a0 1px, transparent 1px),
                           linear-gradient(to bottom, #a0a0a0 1px, transparent 1px) `,
-                      backgroundSize: "20px 20px",
+                      backgroundSize: "15px 15px",
                     }}
                   >
                     {/* 左侧内容 */}

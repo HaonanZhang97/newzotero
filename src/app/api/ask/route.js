@@ -1,22 +1,13 @@
-export async function POST(request) {
-    const { query, resultsPerPage } = await request.json();
+const SERVER_URL = process.env.SERVER_URL?.trim().replace(/\/$/, "") || "http://localhost:5000";
 
-    // 生成模拟数据
-    const allResults = Array.from({ length: 20 }).map((_, i) => ({
-        content: `这是笔记内容${i + 1}，和你的搜索“${query}”相关。`,
-        title: `笔记标题${i + 1}`,
-        author: `作者${String.fromCharCode(65 + (i % 5))}`,
-        date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        score: (Math.random() * 0.5).toFixed(2),
-        type: i % 2 === 0 ? "abstract" : "free"
-    }));
-
-    let results;
-    if (resultsPerPage === "all") {
-        results = allResults;
-    } else {
-        results = allResults.slice(0, Number(resultsPerPage) || 5);
-    }
-
-    return Response.json({ results });
+export async function POST(req) {
+    // 直接转发 POST 请求到 Flask 后端
+    const body = await req.text();
+    const flaskRes = await fetch(SERVER_URL + "/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+    });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
 }

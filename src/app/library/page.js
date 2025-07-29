@@ -8,6 +8,8 @@ import "./page.css";
 
 export default function LibraryPage() {
 
+  const username = typeof window !== "undefined" ? localStorage.getItem("username") : "";
+
   const [files, setFiles] = useState([]);
   const [selectedFileIndex, setSelectedFileIndex] = useState(null);
   const [abstractEntries, setAbstractEntries] = useState({
@@ -49,7 +51,8 @@ export default function LibraryPage() {
 
   // 加载已有文件
   useEffect(() => {
-    fetch("/api/files")
+    if (!username) return;
+    fetch(`/api/files?username=${encodeURIComponent(username)}`)
       .then((res) => res.json())
       .then((data) => {
         setFiles(data || []);
@@ -59,13 +62,13 @@ export default function LibraryPage() {
             ...data[0].meta,
             content: "",
           });
-          // 加载第一个文件的 notes
-          fetch(`/api/notes?fileId=${data[0].id}`)
+          // 加载所有 notes（不带 fileId，拿到所有 free 和 abstract）
+          fetch(`/api/notes?username=${encodeURIComponent(username)}`)
             .then(res => res.json())
             .then(notesData => setNotes(notesData || []));
         }
       });
-  }, []);
+  }, [username]);
 
 
   const handleEntryChange = (e) => {
@@ -81,7 +84,11 @@ export default function LibraryPage() {
       fileId: file.id,
       content: abstractEntries.content,
       createdAt: new Date().toISOString(),
-      type: "abstract"
+      type: "abstract",
+      title: abstractEntries.title,
+      author: abstractEntries.author,
+      date: abstractEntries.date,
+      page: abstractEntries.page
     };
     // 1. 本地更新
     setNotes(prev => [...prev, newNote]);
@@ -90,7 +97,7 @@ export default function LibraryPage() {
     await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newNote)
+      body: JSON.stringify({ ...newNote, username })
     });
   };
 
@@ -102,7 +109,7 @@ export default function LibraryPage() {
     await fetch('/api/notes', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: noteId })
+      body: JSON.stringify({ id: noteId, username })
     });
   };
 
@@ -110,14 +117,16 @@ export default function LibraryPage() {
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const droppedFiles = Array.from(e.dataTransfer.files).filter(
-      (file) =>
-        file.name.toLowerCase().endsWith(".pdf") ||
-        file.name.toLowerCase().endsWith(".docx")
-    );
-    if (droppedFiles.length > 0) {
-      setFiles((prev) => [...prev, ...droppedFiles]);
-    }
+    alert("文件上传功能还在开发中");
+    return;
+    // const droppedFiles = Array.from(e.dataTransfer.files).filter(
+    //   (file) =>
+    //     file.name.toLowerCase().endsWith(".pdf") ||
+    //     file.name.toLowerCase().endsWith(".docx")
+    // );
+    // if (droppedFiles.length > 0) {
+    //   setFiles((prev) => [...prev, ...droppedFiles]);
+    // }
   };
 
   const handleDragOver = (e) => {
@@ -127,42 +136,44 @@ export default function LibraryPage() {
 
   // 点击上传
   const handleFileChange = async (e) => {
-    const selectedFiles = Array.from(e.target.files).filter(
-      (file) =>
-        file.title.toLowerCase().endsWith(".pdf") ||
-        file.title.toLowerCase().endsWith(".docx")
-    );
-    for (const file of selectedFiles) {
-      const res = await fetch('/api/parse_pdf', {
-        method: 'POST',
-        body: JSON.stringify({ title: file.title }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const meta = await res.json();
-      const newFile = {
-        id: Date.now() + Math.random() + file.title,
-        title: file.title,
-        meta: { ...meta, type: 'pdf' },
-        notes: []
-      };
-      // 同步到后端
-      await fetch('/api/files', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newFile)
-      });
-      setFiles(prev => {
-        const updated = [...prev, newFile];
-        setSelectedFileIndex(updated.length - 1);
-        setAbstractEntries({
-          ...newFile.meta,
-          content: "",
-        });
-        setNotes([]);
-        return updated;
-      });
-    }
-    e.target.value = "";
+    // const selectedFiles = Array.from(e.target.files).filter(
+    //   (file) =>
+    //     file.name.toLowerCase().endsWith(".pdf") ||
+    //     file.name.toLowerCase().endsWith(".docx")
+    // );
+    // for (const file of selectedFiles) {
+    //   const res = await fetch('/api/parse_pdf', {
+    //     method: 'POST',
+    //     body: JSON.stringify({ title: file.name }),
+    //     headers: { 'Content-Type': 'application/json' }
+    //   });
+    //   const meta = await res.json();
+    //   const newFile = {
+    //     id: Date.now() + Math.random() + file.name.replace(/[\/\\]/g, "_"),
+    //     title: file.name,
+    //     meta: { ...meta, type: 'pdf' },
+    //     notes: []
+    //   };
+    //   // 同步到后端
+    //   await fetch('/api/files', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ ...newFile, username })
+    //   });
+    //   setFiles(prev => {
+    //     const updated = [...prev, newFile];
+    //     setSelectedFileIndex(updated.length - 1);
+    //     setAbstractEntries({
+    //       ...newFile.meta,
+    //       content: "",
+    //     });
+    //     setNotes([]);
+    //     return updated;
+    //   });
+    // }
+    // e.target.value = "";
+    alert("文件上传功能还在开发中");
+    return;
   };
 
   // 删除文件
@@ -172,13 +183,13 @@ export default function LibraryPage() {
     await fetch('/api/files', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: fileToDelete.id })
+      body: JSON.stringify({ id: fileToDelete.id, username })
     });
     // 2. 删除该文件的所有notes
     await fetch('/api/notes', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileId: fileToDelete.id })
+      body: JSON.stringify({ fileId: fileToDelete.id, username }) // ★加 username
     });
     // 3. 本地更新
     const newFiles = files.filter((_, i) => i !== idx);
@@ -192,7 +203,7 @@ export default function LibraryPage() {
         content: "",
       });
       // 加载新文件的notes
-      fetch(`/api/notes?fileId=${newFiles[0].id}`)
+      fetch(`/api/notes?fileId=${newFiles[0].id}&username=${encodeURIComponent(username)}`)
         .then(res => res.json())
         .then(notesData => setNotes(notesData || []));
     } else {
@@ -229,8 +240,9 @@ export default function LibraryPage() {
       const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}`);
       if (!response.ok) throw new Error("未查到该DOI信息");
       const data = await response.json();
+
       const newFile = {
-        id: Date.now() + Math.random() + doi,
+        id: Date.now() + Math.random() + doi.replace(/[\/\\]/g, "_"),
         title: data.message.title[0] || "DOI文献",
         meta: {
           title: data.message.title[0] || "",
@@ -244,11 +256,12 @@ export default function LibraryPage() {
           type: 'doi'
         }
       };
+      console.log(newFile.id);
       // 存到后端
       await fetch('/api/files', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newFile)
+        body: JSON.stringify({ ...newFile, username }) // ★加 username
       });
       // 本地更新并自动选中新文件
       setFiles(prev => {
@@ -274,11 +287,10 @@ export default function LibraryPage() {
       ...files[idx].meta,
       content: "",
     });
-    fetch(`/api/notes?fileId=${files[idx].id}`)
+    fetch(`/api/notes?fileId=${files[idx].id}&username=${encodeURIComponent(username)}`) // ★加 username
       .then(res => res.json())
       .then(notesData => {
         setNotes(prevNotes => {
-          // 保留 type === "free" 的笔记，合并新加载的非 free 笔记
           const freeNotes = prevNotes.filter(n => n.type === "free");
           const otherNotes = (notesData || []).filter(n => n.type !== "free");
           return [...freeNotes, ...otherNotes];
@@ -299,13 +311,13 @@ export default function LibraryPage() {
     await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newNote)
+      body: JSON.stringify({ ...newNote, username }) // ★加 username
     });
   };
 
   const handleManualAddFile = async () => {
     if (!abstractEntries.title.trim()) return;
-    const fileId = Date.now() + Math.random()
+    const fileId = Date.now() + Math.random() + abstractEntries.title.replace(/[\/\\]/g, "_");
     const newNote = {
       id: Date.now() + Math.random(),
       fileId: fileId,
@@ -321,12 +333,12 @@ export default function LibraryPage() {
     await fetch('/api/files', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newFile)
+      body: JSON.stringify({ ...newFile, username }) // ★加 username
     });
     await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newNote)
+      body: JSON.stringify({ ...newNote, username }) // ★加 username
     });
     setFiles(prev => {
       const updated = [...prev, newFile];
@@ -610,7 +622,7 @@ export default function LibraryPage() {
                     linear-gradient(to right, #e0e0e0 1px, transparent 1px),
                     linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)
                 `,
-                backgroundSize: "20px 20px",
+                backgroundSize: "15px 15px",
               }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <span style={{ fontSize: "22px", color: "#000", fontWeight: "bold" }}>(</span>
@@ -775,7 +787,7 @@ export default function LibraryPage() {
                 `,
                 display: "flex",
                 justifyContent: "center",
-                backgroundSize: "20px 20px",
+                backgroundSize: "15px 15px",
                 position: "relative",
               }}>
                 <textarea
@@ -831,7 +843,7 @@ export default function LibraryPage() {
                 }}
               >
                 {notes.length === 0 && <div style={{ color: "#bbb" }}>暂无摘录</div>}
-                {(noteExpanded ? notes : notes.slice(0, 1)).map(note => (
+                {(noteExpanded ? notes.filter(n => n.type !== "free") : notes.filter(n => n.type !== "free").slice(0, 1)).map(note => (
                   <div
                     key={note.id}
                     style={{
@@ -843,7 +855,7 @@ export default function LibraryPage() {
                         linear-gradient(to right, #e0e0e0 1px, transparent 1px),
                         linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)
                       `,
-                      backgroundSize: "20px 20px",
+                      backgroundSize: "15px 15px",
                       display: "flex",
                       alignItems: "center",
                     }}
@@ -930,7 +942,7 @@ export default function LibraryPage() {
                 `,
                 display: "flex",
                 justifyContent: "center",
-                backgroundSize: "20px 20px",
+                backgroundSize: "15px 15px",
                 position: "relative",
               }}>
                 <textarea
@@ -987,7 +999,7 @@ export default function LibraryPage() {
                         linear-gradient(to right, #a0a0a0 1px, transparent 1px),
                         linear-gradient(to bottom, #a0a0a0 1px, transparent 1px)
                       `,
-                      backgroundSize: "20px 20px",
+                      backgroundSize: "15px 15px",
                       display: "flex",
                       alignItems: "center",
                     }}

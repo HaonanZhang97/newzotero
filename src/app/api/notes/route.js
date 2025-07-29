@@ -1,37 +1,33 @@
-let notes = [
-    // 示例
-    { id: 101, fileId: 0, content: "这是一个测试摘录", createdAt: "2025-07-27T12:00:00Z", type: "abstract" },
-    { id: 102, fileId: 0, content: "这是另一个测试摘录", createdAt: "2025-07-28T12:00:00Z", type: "abstract" }
-];
+const SERVER_URL = process.env.SERVER_URL?.trim().replace(/\/$/, "") || "http://localhost:5000";
 
 export async function GET(req) {
-    // 支持按 fileId 查询
-    const { searchParams } = new URL(req.url);
-    const fileId = searchParams.get("fileId");
-    if (fileId) {
-        return Response.json(notes.filter(n => n.fileId == fileId));
-    }
-    return Response.json(notes);
+    // 转发 GET 请求到 Flask 后端
+    const url = SERVER_URL + "/api/notes" + (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "");
+    const flaskRes = await fetch(url, { method: "GET" });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
 }
 
 export async function POST(req) {
-    const data = await req.json();
-    notes.push(data);
-    return Response.json({ success: true });
-}
-
-export async function PUT(req) {
-    const data = await req.json();
-    notes = notes.map(n => n.id === data.id ? data : n);
-    return Response.json({ success: true });
+    // 转发 POST 请求到 Flask 后端
+    const body = await req.text();
+    const flaskRes = await fetch(SERVER_URL + "/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+    });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
 }
 
 export async function DELETE(req) {
-    const { id, fileId } = await req.json();
-    if (fileId !== undefined) {
-        notes = notes.filter(n => n.fileId !== fileId);
-    } else if (id !== undefined) {
-        notes = notes.filter(n => n.id !== id);
-    }
-    return Response.json({ success: true });
+    // 转发 DELETE 请求到 Flask 后端
+    const body = await req.text();
+    const flaskRes = await fetch(SERVER_URL + "/api/notes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body,
+    });
+    const data = await flaskRes.json();
+    return Response.json(data, { status: flaskRes.status });
 }
