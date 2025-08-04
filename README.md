@@ -42,7 +42,7 @@ A full-stack web application designed for managing and searching research paper 
 
 ### Run With Docker Compose
 
--docker-compose docker-compose.simple.yml up -d
+- docker-compose docker-compose.simple.yml up -d
 
 ### Clone the Repository
 
