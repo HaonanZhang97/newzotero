@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AI Research Note Platform
 
-## Getting Started
+A full-stack web application designed for managing and searching research paper notes using semantic embeddings. Users can add papers via manual entry, file upload, or DOI search, and create AI-searchable excerpts and freeform notes.
 
-First, run the development server:
+🌐 **Live Demo**: [http://94.72.121.125:3000/](http://94.72.121.125:3000/)
+
+---
+
+## ✨ Features
+
+- 📄 Add papers via:
+  - Manual entry
+  - File upload (PDF)
+  - DOI-based lookup
+- 🧠 Semantic search across:
+  - Extracted excerpts
+  - Freeform user notes
+- 🔍 Vector embedding-based retrieval using language models
+- 📥 Download uploaded PDF files directly from the interface
+- 🧰 Fully Dockerized and deployable via `docker-compose`
+
+---
+
+## 🛠 Tech Stack
+
+| Layer      | Technology           |
+|------------|----------------------|
+| Frontend   | Next.js (React)      |
+| Backend    | Flask (RESTful API)  |
+| Embedding  | Vector model (e.g. OpenAI / DeepSeek / Sentence Transformers) |
+| Deployment | Docker, Docker Compose |
+| Server     | Ubuntu (public IP: `94.72.121.125`) |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Run With Docker Compose
+
+-docker-compose docker-compose.simple.yml up -d
+
+### Clone the Repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+git clone https://github.com/your-username/ai-note-platform.git
+cd ai-note-platform
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
