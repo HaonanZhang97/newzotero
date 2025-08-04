@@ -3,8 +3,8 @@
     color: #111;
     border: none;
     border-radius: 6px;
-    padding: 12px 32px;
-    font-size: 24px;
+    padding: 1vh 2vw;
+    font-size: clamp(16px, 2vw, 24px);
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -21,6 +21,52 @@ input.center-placeholder {
 
 input.center-placeholder::placeholder {
     text-align: center;
+}
+
+/* 添加媒体查询处理小屏幕 */
+@media (max-width: 768px) {
+    .search-container {
+        width: 95vw !important;
+    }
+
+    .results-container {
+        padding: 1.5vh !important;
+    }
+
+    .result-item {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .result-content {
+        margin-left: 0 !important;
+        margin-bottom: 2vh !important;
+    }
+
+    .result-meta {
+        margin-left: 0 !important;
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-title {
+        font-size: clamp(24px, 8vw, 48px) !important;
+    }
+
+    .top-bar .left-logo {
+        left: 2vw !important;
+    }
+
+    .top-bar .right-buttons {
+        right: 2vw !important;
+        gap: 1vw !important;
+    }
+
+    .result-meta {
+        grid-template-columns: 1fr !important;
+        gap: 0.5vh 1vw !important;
+    }
 }
 
 .hide-scrollbar {

@@ -102,9 +102,10 @@ export default function NoteBrowsePage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "32px 48px 0 48px",
+          padding: "2vh 3vw 0 3vw",
           position: "relative",
-          height: "120px", // 顶部栏高度可根据实际调整
+          height: "12vh",
+          minHeight: "80px",
           boxSizing: "border-box",
         }}
       >
@@ -112,18 +113,18 @@ export default function NoteBrowsePage() {
           <div
             style={{
               position: "absolute",
-              top: "67px",
-              left: "80px",
+              top: "50%",
+              left: "5vw",
+              transform: "translateY(-50%)",
               fontWeight: "bold",
-              fontSize: "24px",
               color: "#111",
             }}
           >
-            <div style={{ fontSize: "32px", marginBottom: "8px" }}>NewZotero</div>
-            <div style={{ fontSize: "18px", opacity: 0.8 }}>v0.1.22 知识库管理助手</div>
+            <div style={{ fontSize: "clamp(24px, 3vw, 32px)", marginBottom: "0.5vh" }}>NewZotero</div>
+            <div style={{ fontSize: "clamp(14px, 1.8vw, 18px)", opacity: 0.8 }}>v0.1.22 知识库管理助手</div>
           </div>
         </Link>
-        <div style={{ position: "absolute", top: "67px", right: "80px" }}>
+        <div style={{ position: "absolute", top: "50%", right: "5vw", transform: "translateY(-50%)", display: "flex", gap: "1.5vw" }}>
           <Link href="/library">
             <button className="library-button">
               笔记写入
@@ -135,11 +136,10 @@ export default function NoteBrowsePage() {
               color: "#fff",
               border: "none",
               borderRadius: "6px",
-              padding: "12px 32px",
-              fontSize: "24px",
+              padding: "1vh 2vw",
+              fontSize: "clamp(16px, 2vw, 24px)",
               fontWeight: "bold",
               cursor: "default",
-              marginLeft: "24px",
             }}
             disabled={true}
           >
@@ -167,16 +167,16 @@ export default function NoteBrowsePage() {
             style={{
               flex: 1,
               display: "flex",
-              marginTop: "8%",
+              marginTop: "6vh",
               justifyContent: "center",
-              padding: "20px",
-              fontSize: "80px",
+              padding: "2vh",
+              fontSize: "clamp(32px, 6vw, 80px)",
             }}>
             What's your next research topic?
           </div>
         )}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
-          <div style={{ width: "60%" }}>
+          <div style={{ width: "min(90vw, 1200px)" }}>
             <input
               className="center-placeholder"
               type="text"
@@ -190,21 +190,21 @@ export default function NoteBrowsePage() {
               placeholder={hasSearched ? "What's your next research topic?" : "输入你想搜索的研究idea,例如：庄子如何看待痛苦"}
               style={{
                 width: "100%",
-                padding: "12px 16px",
-                fontSize: "24px",
+                padding: "1vh 1.5vw",
+                fontSize: "clamp(16px, 2vw, 24px)",
                 border: "2px dashed #000",
                 borderRadius: "4px",
-                marginTop: hasSearched ? "2%" : "16px",
+                marginTop: hasSearched ? "2%" : "2vh",
               }}
             />
-            <div style={{ display: "flex", alignItems: "center", marginTop: "12px" }}>
-              <span style={{ fontSize: "20px", marginRight: "12px" }}>返回最多匹配数：</span>
+            <div style={{ display: "flex", alignItems: "center", marginTop: "1.5vh" }}>
+              <span style={{ fontSize: "clamp(14px, 1.8vw, 20px)", marginRight: "1vw" }}>返回最多匹配数：</span>
               <select
                 onChange={e => setResultsPerPage(e.target.value)}
                 style={{
-                  width: "8vw",
-                  padding: "12px 16px",
-                  fontSize: "24px",
+                  width: "clamp(60px, 8vw, 120px)",
+                  padding: "1vh 1vw",
+                  fontSize: "clamp(16px, 2vw, 24px)",
                   border: "none",
                   borderRadius: "4px",
                   textAlign: "center"
@@ -218,8 +218,8 @@ export default function NoteBrowsePage() {
                 <option value="all">all</option>
               </select>
             </div>
-            {!hasSearched && (<div style={{ display: "flex", alignItems: "center", marginTop: "8px" }}>
-              <span style={{ fontSize: "20px", marginRight: "12px", color: "#828282" }}>
+            {!hasSearched && (<div style={{ display: "flex", alignItems: "center", marginTop: "1vh" }}>
+              <span style={{ fontSize: "clamp(12px, 1.6vw, 20px)", marginRight: "1vw", color: "#828282" }}>
                 如何使用该功能：<br />
                 · 输入任何你感兴趣的想法或问题，模型将会自动为你寻找和你的问题最相关的旧笔记！<br />
                 · 匹配的回复将按照 “相似度评分” 从低到高排行；<br />
@@ -230,12 +230,12 @@ export default function NoteBrowsePage() {
               <div
                 className="hide-scrollbar"
                 style={{
-                  marginTop: "32px",
+                  marginTop: "3vh",
                   width: "100%",
-                  maxWidth: "100%", // 保证不超出父容器
-                  maxHeight: "80vh", // 控制高度
+                  maxWidth: "100%",
+                  maxHeight: "75vh",
                   overflowY: "auto",
-                  overflowX: "hidden", // 禁止横向滚动
+                  overflowX: "hidden",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center"
@@ -246,12 +246,13 @@ export default function NoteBrowsePage() {
                     key={idx}
                     style={{
                       display: "flex",
+                      flexDirection: "column",
                       width: "100%",
                       backgroundColor: item.type === "abstract" ? "#fafafa" : "#cccccc",
                       border: "1px solid #e0e0e0",
-                      marginBottom: "24px",
+                      marginBottom: "2vh",
                       boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                      padding: "24px",
+                      padding: "2vh",
                       backgroundImage:
                         item.type === "abstract" ?
                           `linear-gradient(to right, #e0e0e0 1px, transparent 1px),
@@ -260,21 +261,48 @@ export default function NoteBrowsePage() {
                           `linear-gradient(to right, #a0a0a0 1px, transparent 1px),
                           linear-gradient(to bottom, #a0a0a0 1px, transparent 1px) `,
                       backgroundSize: "15px 15px",
+                      gap: "1.5vh",
                     }}
                   >
-                    {/* 左侧内容 */}
-                    <div style={{ flex: "0 0 60%", marginLeft: "3vw", fontSize: "18px", color: "#222", lineHeight: 1.8, wordBreak: "break-all" }}>
+                    {/* 内容部分 */}
+                    <div style={{
+                      fontSize: "clamp(14px, 1.6vw, 18px)",
+                      color: "#222",
+                      lineHeight: 1.8,
+                      wordBreak: "break-word",
+                      marginBottom: "1vh"
+                    }}>
                       <b>内容：</b>{item.content}
                     </div>
-                    {/* 右侧元信息 */}
-                    <div style={{ flex: "0 0 40%", marginLeft: "8vw", fontSize: "15px", color: "#444", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-                      <div style={{ marginBottom: "8px" }}><b>标题：</b>{item.title}</div>
-                      <div style={{ marginBottom: "8px" }}><b>作者：</b>{item.author}</div>
-                      <div style={{ marginBottom: "8px" }}><b>发表日期：</b>{item.date}</div>
-                      <div style={{ marginBottom: "8px" }}><b>相似度评分：</b>{item.score}</div>
+
+                    {/* 元信息部分 */}
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                      gap: "1vh 2vw",
+                      fontSize: "clamp(12px, 1.3vw, 15px)",
+                      color: "#444"
+                    }}>
+                      <div style={{ wordBreak: "break-word" }}>
+                        <b>标题：</b>
+                        <span style={{ display: "inline-block", maxWidth: "100%" }}>{item.title}</span>
+                      </div>
+                      <div style={{ wordBreak: "break-word" }}>
+                        <b>作者：</b>
+                        <span style={{ display: "inline-block", maxWidth: "100%" }}>{item.author}</span>
+                      </div>
+                      <div style={{ wordBreak: "break-word" }}>
+                        <b>发表日期：</b>
+                        <span style={{ display: "inline-block", maxWidth: "100%" }}>{item.date}</span>
+                      </div>
+                      <div style={{ wordBreak: "break-word" }}>
+                        <b>相似度评分：</b>
+                        <span style={{ display: "inline-block", maxWidth: "100%" }}>{item.score}</span>
+                      </div>
+
                       {/* 下载按钮（仅对可下载文件显示） */}
                       {item.fileDownloadable && item.fileId && (
-                        <div style={{ marginTop: "12px" }}>
+                        <div style={{ gridColumn: "span 2", justifySelf: "start" }}>
                           <button
                             onClick={() => handleDownload(item.fileId, item.fileTitle)}
                             style={{
@@ -282,8 +310,8 @@ export default function NoteBrowsePage() {
                               color: "white",
                               border: "none",
                               borderRadius: "4px",
-                              padding: "8px 16px",
-                              fontSize: "14px",
+                              padding: "0.8vh 1.5vw",
+                              fontSize: "clamp(12px, 1.2vw, 14px)",
                               cursor: "pointer",
                               fontWeight: "bold",
                             }}

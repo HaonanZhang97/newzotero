@@ -545,9 +545,10 @@ export default function LibraryPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "32px 48px 0 48px",
+          padding: "2vh 3vw 0 3vw",
           position: "relative",
-          height: "120px", // 顶部栏高度可根据实际调整
+          height: "12vh",
+          minHeight: "80px",
           boxSizing: "border-box",
         }}
       >
@@ -555,29 +556,28 @@ export default function LibraryPage() {
           <div
             style={{
               position: "absolute",
-              top: "67px",
-              left: "80px",
+              top: "50%",
+              left: "5vw",
+              transform: "translateY(-50%)",
               fontWeight: "bold",
-              fontSize: "24px",
               color: "#111",
             }}
           >
-            <div style={{ fontSize: "32px", marginBottom: "8px" }}>NewZotero</div>
-            <div style={{ fontSize: "18px", opacity: 0.8 }}>v0.1.22 知识库管理助手</div>
+            <div style={{ fontSize: "clamp(24px, 3vw, 32px)", marginBottom: "0.5vh" }}>NewZotero</div>
+            <div style={{ fontSize: "clamp(14px, 1.8vw, 18px)", opacity: 0.8 }}>v0.1.22 知识库管理助手</div>
           </div>
         </Link>
-        <div style={{ position: "absolute", top: "67px", right: "80px" }}>
+        <div style={{ position: "absolute", top: "50%", right: "5vw", transform: "translateY(-50%)", display: "flex", gap: "1.5vw" }}>
           <button
             style={{
               background: "#111",
               color: "#fff",
               border: "none",
               borderRadius: "6px",
-              padding: "12px 32px",
-              fontSize: "24px",
+              padding: "1vh 2vw",
+              fontSize: "clamp(16px, 2vw, 24px)",
               fontWeight: "bold",
               cursor: "default",
-              marginRight: "24px",
             }}
             disabled={true}
           >
@@ -593,14 +593,14 @@ export default function LibraryPage() {
         </div>
       </div>
       {/* 主体区域：上下平分 */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowX: "hidden" }}>
         {/* 上半部分 */}
         <div
           style={{
             background: "#fff",
             width: "100%",
             height: "50vh",
-            minHeight: 0,
+            minHeight: "400px",
             display: "flex",
             flexDirection: "column",
             boxSizing: "border-box",
@@ -611,14 +611,14 @@ export default function LibraryPage() {
             style={{
               display: "flex",
               flex: 1,
-              padding: "0 48px 0 48px",
-              marginTop: "32px",
-              gap: "32px",
+              padding: "0 3vw",
+              marginTop: "2vh",
+              gap: "2vw",
               minHeight: 0,
             }}
           >
             {/* 左栏 */}
-            <div style={{ flex: "0 0 480px", display: "flex", flexDirection: "column", gap: "12px", borderRight: "1px solid #E6E6E6", paddingRight: "24px" }}>
+            <div style={{ flex: "0 0 30vw", maxWidth: "480px", minWidth: "300px", display: "flex", flexDirection: "column", gap: "1vh", borderRight: "1px solid #E6E6E6", paddingRight: "1.5vw" }}>
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
@@ -627,13 +627,12 @@ export default function LibraryPage() {
                   flexDirection: "column",
                   border: "2px dashed #bbb",
                   borderRadius: "10px",
-                  minHeight: "220px",
+                  minHeight: "25vh",
                   alignItems: "center",
                   justifyContent: "flex-start",
-                  padding: "18px 0 0 0",
+                  padding: "1.5vh 0 0 0",
                   background: "#fafafa",
                   transition: "border-color 0.2s",
-                  overflowY: "auto",
                   flex: "1 1 auto"
                 }}
               >
@@ -643,10 +642,10 @@ export default function LibraryPage() {
                     color: "#fff",
                     border: "none",
                     borderRadius: "6px",
-                    padding: "18px 0",
-                    fontSize: "20px",
+                    padding: "1.5vh 0",
+                    fontSize: "clamp(16px, 1.8vw, 20px)",
                     fontWeight: "bold",
-                    marginBottom: "18px",
+                    marginBottom: "1.5vh",
                     cursor: "pointer",
                     width: "90%",
                   }}
@@ -670,16 +669,17 @@ export default function LibraryPage() {
                     background: selectedFileIndex === "manual" ? "#e0eaff" : "#f5f5f5",
                     border: selectedFileIndex === "manual" ? "2px solid #1976d2" : "none",
                     borderRadius: "8px",
-                    padding: "12px 16px",
-                    marginBottom: "12px",
+                    padding: "1vh 1vw",
+                    marginBottom: "1vh",
                     display: "flex",
                     alignItems: "center",
-                    gap: "12px",
-                    width: "90%",
+                    gap: "0.8vw",
+                    width: "80%",
                     cursor: "pointer",
                     position: "relative",
+                    fontSize: "clamp(12px, 1.2vw, 16px)",
                   }}>
-                  <Image src="/file_icon.svg" alt="icon" width={36} height={36} />
+                  <Image src="/file_icon.svg" alt="icon" width={32} height={32} />
                   + 手动添加文件
                 </div>
                 <input
@@ -692,7 +692,7 @@ export default function LibraryPage() {
                 />
                 {/* 文件列表 */}
                 {files.length === 0 ? (
-                  <div style={{ color: "#aaa", fontSize: "15px", marginTop: "40px" }}>
+                  <div style={{ color: "#aaa", fontSize: "clamp(12px, 1.2vw, 15px)", marginTop: "3vh" }}>
                     暂无文件
                   </div>
                 ) : (
@@ -704,18 +704,18 @@ export default function LibraryPage() {
                         background: selectedFileIndex === idx ? "#e0eaff" : "#f5f5f5", // 高亮背景
                         border: selectedFileIndex === idx ? "2px solid #1976d2" : "none",
                         borderRadius: "8px",
-                        padding: "12px 16px",
-                        marginBottom: "12px",
+                        padding: "1vh 1vw",
+                        marginBottom: "1vh",
                         display: "flex",
                         alignItems: "center",
-                        gap: "12px",
-                        width: "90%",
+                        gap: "0.8vw",
+                        width: "80%",
                         cursor: "pointer",
                         position: "relative",
                       }}
                     >
-                      <Image src={getIcon(file.title)} alt="icon" width={36} height={36} />
-                      <span style={{ fontSize: "15px", color: "#222", wordBreak: "break-all", flex: 1 }}>
+                      <Image src={getIcon(file.title)} alt="icon" width={32} height={32} />
+                      <span style={{ fontSize: "clamp(12px, 1.2vw, 15px)", color: "#222", wordBreak: "break-all", flex: 1 }}>
                         {file.title}
                       </span>
                       <button
@@ -725,14 +725,14 @@ export default function LibraryPage() {
                         }}
                         style={{
                           position: "absolute",
-                          right: "8px",
+                          right: "0.5vw",
                           top: "50%",
                           transform: "translateY(-50%)",
                           background: "none",
                           border: "none",
                           color: "#d32f2f",
                           fontWeight: "bold",
-                          fontSize: "18px",
+                          fontSize: "clamp(14px, 1.5vw, 18px)",
                           cursor: "pointer",
                         }}
                         title="删除"
@@ -743,21 +743,21 @@ export default function LibraryPage() {
                   ))
                 )}
               </div>
-              <div style={{ color: "#828282", fontSize: "18px", width: "90%" }}>
-                使用说明：可以为每一个单体条文存储原始的文件（pdf或doc格式均可），单独记录摘要内容。<br />
+              <div style={{ color: "#828282", fontSize: "clamp(12px, 1.4vw, 18px)", width: "90%" }}>
+                使用说明：可以为每一个你想保存或摘录的文献（pdf或docs格式均可）单独记录摘录内容。<br />
                 <br />
                 推荐内容带有 “Free Writing” 一起保存
               </div>
             </div>
             {/* 右栏 */}
 
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1vh" }}>
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <div>
-                  <span style={{ fontWeight: "bold", fontSize: "18px" }}>输入DOI</span>
+                  <span style={{ fontWeight: "bold", fontSize: "clamp(14px, 1.6vw, 18px)" }}>输入DOI</span>
                 </div>
                 <div>
-                  <span style={{ color: "#7E7E7E", fontSize: "12px" }}>将自动导入该doi的所有信息（如有）</span>
+                  <span style={{ color: "#7E7E7E", fontSize: "clamp(10px, 1vw, 12px)" }}>将自动导入该doi的所有信息（如有）</span>
                 </div>
                 <div>
                   <input
@@ -772,19 +772,19 @@ export default function LibraryPage() {
                     style={{
                       background: "#D9D9D9",
                       border: "none",
-                      fontSize: "16px",
+                      fontSize: "clamp(14px, 1.4vw, 16px)",
                       width: "100%",
                       boxSizing: "border-box",
-                      padding: "6px 10px",
+                      padding: "0.5vh 1vw",
                     }} />
                 </div>
-                {doiError && <div style={{ color: "#d32f2f", fontSize: "12px" }}>{doiError}</div>}
+                {doiError && <div style={{ color: "#d32f2f", fontSize: "clamp(10px, 1vw, 12px)" }}>{doiError}</div>}
               </div>
               <div style={{
                 background: "#fafafa",
-                padding: "6px 10px",
-                fontSize: "16px",
-                marginBottom: "8px",
+                padding: "0.5vh 1vw",
+                fontSize: "clamp(14px, 1.4vw, 16px)",
+                marginBottom: "1vh",
                 backgroundImage: `
                     linear-gradient(to right, #e0e0e0 1px, transparent 1px),
                     linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)
@@ -792,7 +792,7 @@ export default function LibraryPage() {
                 backgroundSize: "15px 15px",
               }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
-                  <span style={{ fontSize: "22px", color: "#000", fontWeight: "bold" }}>(</span>
+                  <span style={{ fontSize: "clamp(18px, 2vw, 22px)", color: "#000", fontWeight: "bold" }}>(</span>
                   <input
                     type="text"
                     name="title"
@@ -802,14 +802,14 @@ export default function LibraryPage() {
                     style={{
                       background: "none",
                       border: "none",
-                      fontSize: "16px",
+                      fontSize: "clamp(14px, 1.4vw, 16px)",
                       fontWeight: "bold",
                       color: "#8C8C8C",
                       outline: "none",
                       width: inputWidths.title,
                       minWidth: 40,
                       transition: "width 0.1s",
-                      marginTop: "4px"
+                      marginTop: "0.3vh"
                     }}
                   />
                   <span
@@ -820,14 +820,14 @@ export default function LibraryPage() {
                       height: 0,
                       overflow: "hidden",
                       whiteSpace: "pre",
-                      fontSize: "16px",
+                      fontSize: "clamp(14px, 1.4vw, 16px)",
                       fontWeight: "bold",
                       fontFamily: "inherit",
                     }}
                   >
                     {abstractEntries.title || "填写文章名"}
                   </span>
-                  <span style={{ fontSize: "22px", color: "#000", fontWeight: "bold" }}>)</span>
+                  <span style={{ fontSize: "clamp(18px, 2vw, 22px)", color: "#000", fontWeight: "bold" }}>)</span>
                 </div>
                 {/* 作者-日期-页码 */}
                 <div style={{ display: "flex", alignItems: "center", fontSize: "15px", color: "#444" }}>
@@ -841,14 +841,14 @@ export default function LibraryPage() {
                     style={{
                       background: "none",
                       border: "none",
-                      fontSize: "16px",
+                      fontSize: "clamp(14px, 1.4vw, 16px)",
                       fontWeight: "bold",
                       color: "#8C8C8C",
                       outline: "none",
                       width: inputWidths.author,
                       minWidth: 40,
                       transition: "width 0.1s",
-                      marginTop: "4px"
+                      marginTop: "0.3vh"
                     }}
                   />
                   <span
@@ -859,7 +859,7 @@ export default function LibraryPage() {
                       height: 0,
                       overflow: "hidden",
                       whiteSpace: "pre",
-                      fontSize: "16px",
+                      fontSize: "clamp(14px, 1.4vw, 16px)",
                       fontWeight: "bold",
                       fontFamily: "inherit",
                     }}
@@ -945,9 +945,9 @@ export default function LibraryPage() {
               </div>
               <div style={{
                 background: "#fafafa",
-                padding: "6px 10px",
-                fontSize: "16px",
-                marginBottom: "8px",
+                padding: "0.5vh 1vw",
+                fontSize: "clamp(14px, 1.4vw, 16px)",
+                marginBottom: "1vh",
                 backgroundImage: `
                     linear-gradient(to right, #e0e0e0 1px, transparent 1px),
                     linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)
@@ -965,11 +965,12 @@ export default function LibraryPage() {
                   style={{
                     background: "none",
                     border: "none",
-                    fontSize: "16px",
+                    fontSize: "clamp(14px, 1.4vw, 16px)",
                     color: "#8C8C8C",
                     outline: "none",
                     width: "100%",
-                    height: "80px",
+                    height: "8vh",
+                    minHeight: "60px",
                     resize: "none",
                     lineHeight: 1.5,
                     textAlign: "left",
@@ -986,9 +987,9 @@ export default function LibraryPage() {
                 />
                 <div style={{
                   position: "absolute",
-                  right: "10px",
-                  bottom: "10px",
-                  fontSize: "12px",
+                  right: "1vw",
+                  bottom: "0.5vh",
+                  fontSize: "clamp(10px, 1vw, 12px)",
                   color: "#888",
                 }}>
                   回车换段 & Ctrl+Enter添加摘录
@@ -997,10 +998,10 @@ export default function LibraryPage() {
               <div
                 className="hide-scrollbar"
                 style={{
-                  minHeight: "80px",
-                  maxHeight: "320px",
-                  marginBottom: "12px",
-                  fontSize: "16px",
+                  minHeight: "8vh",
+                  maxHeight: "35vh",
+                  marginBottom: "1vh",
+                  fontSize: "clamp(14px, 1.4vw, 16px)",
                   flex: 1,
                   overflowY: "auto",
                   overflowX: "auto",
@@ -1016,50 +1017,33 @@ export default function LibraryPage() {
                 ).map(note => (
                   <div
                     key={note.id}
-                    style={{
-                      marginBottom: 12,
-                      border: "1px solid #e0e0e0",
-                      padding: "12px 16px",
-                      background: "#fafafa",
-                      backgroundImage: `
-                        linear-gradient(to right, #e0e0e0 1px, transparent 1px),
-                        linear-gradient(to bottom, #e0e0e0 1px, transparent 1px)
-                      `,
-                      backgroundSize: "15px 15px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
+                    className="abstract-note"
                   >
-                    <div style={{ flex: 1, minWidth: 0, wordBreak: "break-all" }}>{note.content}</div>
-                    <div style={{ color: "#888", fontSize: 12, marginLeft: 12, whiteSpace: "nowrap" }}>
-                      {generateAPA(files[selectedFileIndex]?.meta)}
+                    <div className="abstract-note-content">{note.content}</div>
+                    <div className="abstract-note-footer">
+                      <div className="abstract-note-apa">
+                        {generateAPA(files[selectedFileIndex]?.meta)}
+                      </div>
+                      <button
+                        className="abstract-note-delete"
+                        onClick={() => handleDeleteNote(note.id)}
+                      >
+                        删除
+                      </button>
                     </div>
-                    <button
-                      style={{
-                        color: "#d32f2f",
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        fontSize: 12,
-                        marginLeft: 12,
-                      }}
-                      onClick={() => handleDeleteNote(note.id)}
-                    >
-                      删除
-                    </button>
                   </div>
                 ))}
                 {notes.filter(n => n.type !== "free" && n.fileId === currentFileId).length > 1 && (
-                  <div style={{ textAlign: "center", marginTop: 8 }}>
+                  <div style={{ textAlign: "center", marginTop: "1vh" }}>
                     <button
-                      style={{ border: "none", background: "none", color: "#000", cursor: "pointer", fontSize: 14 }}
+                      style={{ border: "none", background: "none", color: "#000", cursor: "pointer", fontSize: "clamp(12px, 1.2vw, 14px)" }}
                       onClick={() => setNoteExpandedMap(map => ({
                         ...map,
                         [currentFileId]: map[currentFileId] === false ? true : false  // 切换状态
                       }))}
                     >
                       {noteExpandedMap[currentFileId] !== false ? "收起" : "展开"}
-                      <span style={{ marginLeft: 4 }}>{noteExpandedMap[currentFileId] !== false ? "▲" : "▼"}</span>
+                      <span style={{ marginLeft: "0.5vw" }}>{noteExpandedMap[currentFileId] !== false ? "▲" : "▼"}</span>
                     </button>
                   </div>
                 )}
@@ -1083,31 +1067,31 @@ export default function LibraryPage() {
             style={{
               display: "flex",
               flex: 1,
-              padding: "32px 48px",
-              gap: "32px",
+              padding: "2vh 3vw",
+              gap: "2vw",
               minHeight: 0,
             }}
           >
             {/* 左栏：标题和说明 */}
-            <div style={{ flex: "0 0 480px", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "24px" }}>
-              <div style={{ fontWeight: "normal", fontSize: "24px", marginBottom: "12px" }}>
+            <div style={{ flex: "0 0 30vw", maxWidth: "480px", minWidth: "300px", display: "flex", flexDirection: "column", gap: "1vh", paddingRight: "1.5vw" }}>
+              <div style={{ fontWeight: "normal", fontSize: "clamp(18px, 2.2vw, 24px)", marginBottom: "1vh" }}>
                 自由笔记区<br />
-                <span style={{ fontWeight: "normal", fontSize: "24px", marginTop: "12px" }}>"Free Writing Zone"</span>
+                <span style={{ fontWeight: "normal", fontSize: "clamp(18px, 2.2vw, 24px)", marginTop: "1vh" }}>"Free Writing Zone"</span>
               </div>
-              <div style={{ color: "#828282", fontSize: "15px", marginBottom: "18px" }}>
+              <div style={{ color: "#828282", fontSize: "clamp(12px, 1.2vw, 15px)", marginBottom: "1.5vh" }}>
                 自由写作是一种在规定时间内连续写作的技巧，无需担心语法、拼写或结构，以产生想法并克服写作障碍这 是一种让您的思绪自由流淌在纸上的方式，帮助您探索主题、发现新想法并突破创造性障碍。<br />
                 <br />
                 ——边记录文献，边记录想法吧！
               </div>
             </div>
             {/* 右栏：自由笔记内容 */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1vh" }}>
               {/* 示例自由笔记 */}
               <div style={{
                 background: "#cccccc",
-                padding: "6px 10px",
-                fontSize: "16px",
-                marginBottom: "8px",
+                padding: "0.5vh 1vw",
+                fontSize: "clamp(14px, 1.4vw, 16px)",
+                marginBottom: "1vh",
                 backgroundImage: `
                   linear-gradient(to right, #a0a0a0 1px, transparent 1px),
                   linear-gradient(to bottom, #a0a0a0 1px, transparent 1px)
@@ -1128,15 +1112,16 @@ export default function LibraryPage() {
                   style={{
                     background: "none",
                     border: "none",
-                    fontSize: "16px",
+                    fontSize: "clamp(14px, 1.4vw, 16px)",
                     color: "#000000",
                     outline: "none",
                     width: "100%",
-                    height: "80px",
+                    height: "8vh",
+                    minHeight: "60px",
                     resize: "none",
                     lineHeight: 1.5,
                     textAlign: "left",
-                    marginTop: "10px",
+                    marginTop: "1vh",
                   }}
                 />
               </div>
@@ -1144,10 +1129,10 @@ export default function LibraryPage() {
               <div
                 className="hide-scrollbar"
                 style={{
-                  minHeight: "80px",
-                  maxHeight: "320px",
-                  marginBottom: "12px",
-                  fontSize: "16px",
+                  minHeight: "8vh",
+                  maxHeight: "35vh",
+                  marginBottom: "1vh",
+                  fontSize: "clamp(14px, 1.4vw, 16px)",
                   flex: 1,
                   overflowY: "auto",
                   overflowX: "auto",
@@ -1163,9 +1148,9 @@ export default function LibraryPage() {
                   <div
                     key={note.id}
                     style={{
-                      marginBottom: 12,
+                      marginBottom: "1vh",
                       border: "1px solid #e0e0e0",
-                      padding: "12px 16px",
+                      padding: "1vh 1vw",
                       background: "#cccccc",
                       backgroundImage: `
                         linear-gradient(to right, #a0a0a0 1px, transparent 1px),
@@ -1181,7 +1166,7 @@ export default function LibraryPage() {
                         position: "absolute",
                         top: 0,
                         left: 0,
-                        fontSize: "24px",
+                        fontSize: "clamp(18px, 2vw, 24px)",
                         color: "#000",
                         fontWeight: "bold",
                         padding: "0 0 4px 0",
@@ -1191,7 +1176,7 @@ export default function LibraryPage() {
                       }}>
                         （{note.createdAt.slice(0, 10)}）
                       </div>
-                      <div style={{ paddingTop: "32px", fontSize: "16px", color: "#000" }}>
+                      <div style={{ paddingTop: "2.5vh", fontSize: "clamp(14px, 1.4vw, 16px)", color: "#000" }}>
                         {note.content}
                       </div>
                     </div>
@@ -1201,8 +1186,10 @@ export default function LibraryPage() {
                         border: "none",
                         background: "none",
                         cursor: "pointer",
-                        fontSize: 12,
-                        marginLeft: 12,
+                        fontSize: "clamp(10px, 1vw, 12px)",
+                        marginLeft: "1vw",
+                        flexShrink: 0,
+                        padding: "0.2vh 0.5vw",
                       }}
                       onClick={() => handleDeleteNote(note.id)}
                     >

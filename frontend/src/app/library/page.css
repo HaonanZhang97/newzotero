@@ -3,8 +3,8 @@
     color: #111;
     border: none;
     border-radius: 6px;
-    padding: 12px 32px;
-    font-size: 24px;
+    padding: 1vh 2vw;
+    font-size: clamp(16px, 2vw, 24px);
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -13,6 +13,77 @@
 .search-btn:hover {
     background: #111;
     color: #fff;
+}
+
+/* 添加媒体查询处理小屏幕 */
+@media (max-width: 768px) {
+    .left-panel {
+        flex: 0 0 40vw !important;
+        min-width: 250px !important;
+    }
+
+    .main-content {
+        padding: 0 2vw !important;
+        gap: 3vw !important;
+    }
+
+    .top-bar {
+        padding: 2vh 2vw 0 2vw !important;
+    }
+
+    .top-bar .left-logo {
+        left: 3vw !important;
+    }
+
+    .top-bar .right-buttons {
+        right: 3vw !important;
+        gap: 2vw !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .left-panel {
+        flex: 0 0 45vw !important;
+        min-width: 200px !important;
+    }
+
+    .main-content {
+        padding: 0 1vw !important;
+        gap: 2vw !important;
+        flex-direction: column !important;
+    }
+
+    .left-panel {
+        flex: none !important;
+        max-width: none !important;
+        min-width: 100% !important;
+        border-right: none !important;
+        padding-right: 0 !important;
+        margin-bottom: 2vh;
+    }
+
+    .right-panel {
+        flex: none !important;
+        width: 100% !important;
+    }
+
+    /* 文件项的调整 */
+    .file-item {
+        width: 95% !important;
+    }
+
+    /* DOI输入区域的调整 */
+    .doi-input {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 摘录输入区域的调整 */
+    .abstract-input-area {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0.5vh 0.5vw !important;
+    }
 }
 
 .hide-scrollbar {
@@ -30,4 +101,67 @@
 textarea.black-placeholder::placeholder {
     color: #000;
     opacity: 1;
+}
+
+/* 摘录笔记样式优化 */
+.abstract-note {
+    margin-bottom: 1vh;
+    border: 1px solid #e0e0e0;
+    padding: 1vh 1vw;
+    background: #fafafa;
+    background-image:
+        linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+        linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+    background-size: 15px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8vh;
+}
+
+.abstract-note-content {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+    font-size: clamp(13px, 1.3vw, 16px);
+    line-height: 1.5;
+}
+
+.abstract-note-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1vw;
+    margin-top: 0.5vh;
+}
+
+.abstract-note-apa {
+    color: #888;
+    font-size: clamp(10px, 1vw, 12px);
+    flex: 1;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+.abstract-note-delete {
+    color: #d32f2f;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: clamp(10px, 1vw, 12px);
+    flex-shrink: 0;
+    padding: 0.2vh 0.5vw;
+}
+
+/* 移动设备优化 */
+@media (max-width: 768px) {
+    .abstract-note-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5vh;
+    }
+
+    .abstract-note-delete {
+        align-self: flex-end;
+        margin-top: 0.5vh;
+    }
 }
