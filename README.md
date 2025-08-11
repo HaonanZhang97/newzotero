@@ -43,9 +43,14 @@ A full-stack web application designed for managing and searching research paper 
 ### Run With Docker Compose
 
 - For the first time
-  - docker-compose -f docker-compose.simple.yml up -d
+  - under test and develop environment
+    - docker-compose -f docker-compose.simple.yml up --build -d 
+  - uder production environment
+    - docker-compose -f docker-compose.yml up --build -d
 - After the container has been built
   - docker-compse up
+  or
+  - deploy.bat/deploy.sh
 
 ### Clone the Repository
 
