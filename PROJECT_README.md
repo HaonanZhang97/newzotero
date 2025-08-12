@@ -151,5 +151,5 @@ NGINX_PORT=80
 
 如果你遇到问题或有建议，请：
 1. 查看 [文档](docs/)
-2. 提交 [Issue](https://github.com/your-username/newzotero/issues)
+2. 提交 [Issue](https://github.com/HaonanZhang97/newzotero/issues)
 3. 加入讨论

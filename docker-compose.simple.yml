@@ -28,6 +28,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app # 挂载前端源代码（包括package.json）
+      - node_modules_cache:/app/node_modules
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
@@ -45,7 +48,8 @@ services:
 volumes:
   backend_uploads:
     driver: local
-
+  node_modules_cache:
+    driver: local
 # 网络配置
 networks:
   app-network:

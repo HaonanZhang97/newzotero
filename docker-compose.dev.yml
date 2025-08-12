@@ -1,0 +1,60 @@
+# 开发环境配置 - 支持热重载
+version: '3.8'
+
+services:
+  # 前端开发服务
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/src:/app/src # 源代码热重载
+      - ./frontend/pages:/app/pages # 页面文件
+      - ./frontend/public:/app/public # 静态资源
+      - node_modules_cache:/app/node_modules # 依赖缓存
+      - nextjs_cache:/app/.next # Next.js缓存
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000" # 从.env读取端口
+    environment:
+      - NODE_ENV=${NODE_ENV:-development} # 可从.env覆盖
+      - NEXT_PUBLIC_API_URL=http://backend-dev:5000
+      - FAST_REFRESH=true
+    env_file:
+      - .env # 加载环境变量文件
+    command: [ "npm", "run", "dev" ] # 开发模式
+    depends_on:
+      - backend-dev
+    networks:
+      - dev-network
+
+  # 后端开发服务  
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app # Python代码热重载
+      - backend_uploads:/app/uploads # 上传文件持久化
+      - backend_logs:/app/logs # 日志持久化
+    ports:
+      - "${BACKEND_PORT:-5000}:5000" # 从.env读取端口
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-development} # 可从.env覆盖
+      - FLASK_DEBUG=${FLASK_DEBUG:-1} # 可从.env覆盖
+      - PYTHONUNBUFFERED=1 # 实时日志输出
+    env_file:
+      - .env # 加载环境变量文件
+    command: [ "python", "NewZotero_py.py" ] # 开发服务器
+    networks:
+      - dev-network
+
+# 开发环境命名卷
+volumes:
+  node_modules_cache:
+    driver: local
+  backend_uploads:
+    driver: local
+
+networks:
+  dev-network:
+    driver: bridge
