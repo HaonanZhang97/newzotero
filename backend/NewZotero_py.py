@@ -106,12 +106,15 @@ def ask():
 
     texts = [note.get("content", "") for note in user_notes]
     embeddings = model.encode(texts)
-    dim = embeddings[0].shape[0]
+    # 确保 embeddings 是正确的格式
+    embeddings = np.array(embeddings).astype('float32')
+    dim = embeddings.shape[1]
     user_index = faiss.IndexFlatL2(dim)
-    user_index.add(embeddings)
+    user_index.add(embeddings)  # type: ignore
 
     query_vec = model.encode([question])
-    D, I = user_index.search(query_vec, k=top_k)
+    query_vec = np.array(query_vec).astype('float32')
+    D, I = user_index.search(query_vec, top_k)  # type: ignore
 
     results = []
     for score, idx in zip(D[0], I[0]):
@@ -153,7 +156,7 @@ def ask():
         "results": results
     })
 
-@app.route('/api/files', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/files', methods=['GET', 'POST', 'DELETE'])  # type: ignore
 def files():
     username = get_username()
     user_dir = os.path.join(UPLOAD_FOLDER, username)
@@ -193,7 +196,7 @@ def files():
         save_files(files)
         return jsonify({'success': True})
 
-@app.route('/api/notes', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/notes', methods=['GET', 'POST', 'DELETE'])  # type: ignore
 def notes_api():
     username = get_username()
     user_dir = os.path.join(UPLOAD_FOLDER, username)
@@ -317,7 +320,7 @@ def upload_file():
         file = request.files['file']
         
         # 如果用户没有选择文件，浏览器提交空的文件名
-        if file.filename == '':
+        if not file.filename or file.filename == '':
             return jsonify({'success': False, 'error': '没有选择文件'}), 400
         
         if file and allowed_file(file.filename):
