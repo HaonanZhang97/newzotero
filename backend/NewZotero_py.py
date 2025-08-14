@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 import uuid
 import threading
 import time
+from typing import List, Dict, Any, Optional, Union
 
 
 app = Flask(__name__)
@@ -24,24 +25,24 @@ lock_dict_mutex = threading.Lock()
 active_users = set()
 user_activity_lock = threading.Lock()
 
-def register_user_activity(username):
+def register_user_activity(username: str) -> None:
     """注册用户活动"""
     with user_activity_lock:
         active_users.add(username)
 
-def get_active_users_count():
+def get_active_users_count() -> int:
     """获取当前活跃用户数"""
     with user_activity_lock:
         return len(active_users)
 
-def get_file_lock(file_path):
+def get_file_lock(file_path: str):
     """获取文件锁，确保线程安全"""
     with lock_dict_mutex:
         if file_path not in file_locks:
             file_locks[file_path] = threading.Lock()
         return file_locks[file_path]
 
-def cleanup_unused_locks():
+def cleanup_unused_locks() -> None:
     """清理不再使用的文件锁（可选的优化）"""
     with lock_dict_mutex:
         # 这里可以添加逻辑来清理长时间未使用的锁
@@ -58,8 +59,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # 允许的文件扩展名
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'txt', 'md'}
 
-def allowed_file(filename):
-    return '.' in filename and \
+def allowed_file(filename: Optional[str]) -> bool:
+    return filename is not None and '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 model = SentenceTransformer("moka-ai/m3e-base")
@@ -69,9 +70,11 @@ SIMILARITY_THRESHOLD = 500.0
 @app.route('/api/check_user', methods=['POST'])
 def check_user():
     username = get_username()
-    user_dir = os.path.join(UPLOAD_FOLDER, username)
-    exists = os.path.exists(user_dir)
-    return jsonify({"exists": exists})
+    if username is not None:
+        user_dir = os.path.join(UPLOAD_FOLDER, username)
+        exists = os.path.exists(user_dir)
+        return jsonify({"exists": exists})
+    return jsonify({"exists": False}), 400
 
 
 @app.route('/api/ask', methods=['POST'])
@@ -90,6 +93,9 @@ def ask():
     if not question:
         return jsonify({"error": "缺少 query/question 参数"}), 400
 
+    if username is None:
+        return jsonify({"error": "无效的用户名"}), 400
+        
     user_dir = os.path.join(UPLOAD_FOLDER, username)
     os.makedirs(user_dir, exist_ok=True)
     notes_path = os.path.join(user_dir, "notes.json")
@@ -156,9 +162,12 @@ def ask():
         "results": results
     })
 
-@app.route('/api/files', methods=['GET', 'POST', 'DELETE'])  # type: ignore
+@app.route('/api/files', methods=['GET', 'POST', 'DELETE'])
 def files():
     username = get_username()
+    if username is None:
+        return jsonify({'success': False, 'error': '无效的用户名'}), 400
+        
     user_dir = os.path.join(UPLOAD_FOLDER, username)
     os.makedirs(user_dir, exist_ok=True)
     files_path = os.path.join(user_dir, "files.json")
@@ -195,10 +204,16 @@ def files():
         files = [f for f in files if f["id"] != data["id"]]
         save_files(files)
         return jsonify({'success': True})
+    
+    # 如果方法不匹配，返回错误
+    return jsonify({'success': False, 'error': '不支持的方法'}), 405
 
-@app.route('/api/notes', methods=['GET', 'POST', 'DELETE'])  # type: ignore
+@app.route('/api/notes', methods=['GET', 'POST', 'DELETE'])
 def notes_api():
     username = get_username()
+    if username is None:
+        return jsonify({'success': False, 'error': '无效的用户名'}), 400
+        
     user_dir = os.path.join(UPLOAD_FOLDER, username)
     os.makedirs(user_dir, exist_ok=True)
 
@@ -271,8 +286,11 @@ def notes_api():
                 
             save_notes(notes)
         return jsonify({'success': True})
+    
+    # 如果方法不匹配，返回错误
+    return jsonify({'success': False, 'error': '不支持的方法'}), 405
 
-def get_username():
+def get_username() -> str:
     """获取并验证用户名"""
     username = None
     
@@ -329,7 +347,10 @@ def upload_file():
             os.makedirs(user_dir, exist_ok=True)
             
             # 生成安全的文件名（避免路径遍历攻击）
-            filename = secure_filename(file.filename)
+            if file.filename is not None:
+                filename = secure_filename(file.filename)
+            else:
+                return jsonify({'success': False, 'error': '文件名无效'}), 400
             
             # 为文件生成唯一ID
             file_id = str(uuid.uuid4()) + filename.replace("/", "_").replace("\\", "_")
