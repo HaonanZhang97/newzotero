@@ -48,6 +48,7 @@ Thumbs.db
 
 # Python
 backend/__pycache__/
+backend/*/__pycache__/
 backend/*.py[cod]
 backend/*$py.class
 backend/*.so
@@ -72,3 +73,9 @@ next-env.d.ts
 
 # internal script
 *.bat
+
+# learning materials
+/learning_materials/
+
+# local Learning Pseudo-data
+/backend/data/
