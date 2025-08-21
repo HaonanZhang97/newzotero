@@ -75,11 +75,11 @@ class UserService:
             
             # 第3步：DTO → Entity转换
             user_data = create_request.to_user_dict()
-            user = User.from_dict(user_data)
+            user = User(**user_data)  # 使用SQLAlchemy构造函数
             
             # 第4步：Entity验证
-            if not user.is_valid():
-                errors = user.get_validation_errors()
+            errors = user.validate()
+            if errors:
                 raise ValueError(f"用户数据验证失败: {'; '.join(errors)}")
             
             # 第5步：Repository持久化
@@ -88,7 +88,7 @@ class UserService:
             return {
                 "success": True,
                 "message": "用户创建成功",
-                "data": saved_user.to_dict()
+                "user": saved_user.to_dict()
             }
             
         except ValueError as e:
@@ -106,7 +106,7 @@ class UserService:
             return {
                 "success": True,
                 "message": f"获取到 {len(users)} 个用户",
-                "data": [user.to_dict() for user in users]
+                "users": [user.to_dict() for user in users]
             }
         except Exception as e:
             return {"success": False, "message": f"获取失败: {str(e)}", "data": None}
@@ -152,8 +152,8 @@ class UserService:
                     setattr(existing_user, key, value)
             
             # Entity验证
-            if not existing_user.is_valid():
-                errors = existing_user.get_validation_errors()
+            errors = existing_user.validate()
+            if errors:
                 raise ValueError(f"更新数据验证失败: {'; '.join(errors)}")
             
             # Repository持久化

@@ -1,119 +1,150 @@
 """
-第3步：Flask配置管理
-==================
+第8步：Flask配置管理 - 添加数据库支持
+==================================
 
 学习目标：
-- 什么是Flask配置
-- 为什么需要多环境配置
-- Development vs Production的区别
-- 如何在应用工厂中使用配置
+- 添加SQLAlchemy数据库配置
+- 环境变量管理
+- 数据库URI配置
+- Flask-Migrate集成
 """
 
 import os
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 # ============================================
-# 第3步：最基础的配置类
+# 第8步：增强的配置类 - 添加数据库支持
 # ============================================
 
 class Config:
     """
     基础配置类 - 所有环境共享的配置
     
-    为什么用类而不是字典？
-    1. 更好的代码组织
-    2. 可以继承和扩展
-    3. IDE支持更好
-    4. 可以添加方法处理复杂逻辑
+    第8步新增：
+    - SQLAlchemy数据库配置
+    - 环境变量支持
+    - 数据库连接池配置
     """
     
     # 基本设置
-    SECRET_KEY = 'dev-secret-key-for-learning'  # 开发用密钥
-    DEBUG = False  # 默认不开启调试
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-for-learning'
+    DEBUG = False
     
     # API设置
     API_VERSION = 'v1'
     API_PREFIX = '/api/v1'
+    
+    # 第8步：数据库配置
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///newzotero.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # 关闭事件系统以节省资源
+    SQLALCHEMY_ECHO = False  # 不显示SQL语句
+    
+    # 数据库连接池配置
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # 连接前验证
+        'pool_recycle': 300,    # 连接回收时间（秒）
+    }
     
     print("📋 Base Config class loaded")
 
 
 class DevelopmentConfig(Config):
     """
-    开发环境配置 - 继承基础配置
+    开发环境配置 - 第8步增强
     
-    开发环境特点：
-    - 开启DEBUG模式
-    - 详细的错误信息
-    - 自动重载代码
+    开发环境数据库特点：
+    - 显示SQL语句便于调试
+    - 使用开发数据库
     """
-    DEBUG = True  # 开启调试模式
+    DEBUG = True
     ENV = 'development'
+    
+    # 开发环境显示SQL语句
+    SQLALCHEMY_ECHO = True
+    
+    # 开发环境可以使用SQLite或PostgreSQL
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///newzotero_dev.db'
     
     print("🔧 Development Config class loaded")
 
 
 class ProductionConfig(Config):
     """
-    生产环境配置 - 继承基础配置
+    生产环境配置 - 第8步增强
     
-    生产环境特点：
-    - 关闭DEBUG模式
-    - 从环境变量获取敏感信息
-    - 更严格的安全设置
+    生产环境数据库特点：
+    - 不显示SQL语句
+    - 必须使用环境变量
+    - 更严格的连接池设置
     """
-    DEBUG = False  # 关闭调试模式
+    DEBUG = False
     ENV = 'production'
     
     # 生产环境从环境变量获取密钥
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key'
+    
+    # 生产环境必须使用环境变量中的数据库
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'postgresql://user:password@localhost/newzotero_prod'
+    
+    # 生产环境连接池配置
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'pool_size': 10,        # 连接池大小
+        'max_overflow': 20      # 最大溢出连接
+    }
     
     print("🚀 Production Config class loaded")
 
 
+class TestingConfig(Config):
+    """
+    第8步：测试环境配置
+    
+    测试环境数据库特点：
+    - 使用内存数据库或测试专用数据库
+    - 每次测试后清理数据
+    """
+    TESTING = True
+    DEBUG = True
+    
+    # 测试环境使用内存SQLite数据库
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    
+    # 测试时不需要CSRF保护
+    WTF_CSRF_ENABLED = False
+    
+    print("🧪 Testing Config class loaded")
+
+
 # ============================================
-# 第3步：配置选择器
+# 第8步：配置选择器 - 增强版
 # ============================================
 
-# 配置映射字典
 config_map = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig  # 默认使用开发环境
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
 }
 
 def get_config(env_name=None):
     """
     根据环境名称获取配置类
     
-    Args:
-        env_name: 环境名称 ('development', 'production')
-        
-    Returns:
-        对应的配置类
+    第8步增强：
+    - 支持测试环境
+    - 更好的环境变量处理
     """
     if env_name is None:
-        env_name = 'default'
+        env_name = os.environ.get('FLASK_ENV', 'default')
     
     config_class = config_map.get(env_name, DevelopmentConfig)
     print(f"📊 Selected config: {config_class.__name__}")
     return config_class
 
-# ============================================
-# 第4步将要添加的功能（暂时注释掉）
-# ============================================
-# TODO: 第4步解锁 - 添加更多环境
-# class TestingConfig(Config):
-#     TESTING = True
-#     WTF_CSRF_ENABLED = False
-
-# TODO: 第5步解锁 - 添加数据库配置
-# class Config:
-#     SQLALCHEMY_DATABASE_URI = '...'
-#     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-# TODO: 第6步解锁 - 添加文件上传配置
-# class Config:
-#     UPLOAD_FOLDER = 'uploads'
-#     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-
-print("⚙️ config.py loaded - Step 3 ready!")
+print("⚙️ config.py loaded - Step 8 ready! (Database support added)")

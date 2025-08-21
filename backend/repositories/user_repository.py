@@ -1,105 +1,37 @@
 """
-第7步：用户数据仓储层(User Repository)
-====================================
+第8步：用户数据仓储层(User Repository) - 数据库版本
+================================================
 
 学习目标：
-- Repository模式的实现
-- 文件存储的数据持久化
+- Repository模式与SQLAlchemy集成
+- 数据库的数据持久化
 - 与SpringBoot JpaRepository的对比
-- CRUD操作的标准实现
+- CRUD操作的SQLAlchemy实现
 """
 
-import json
-import os
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from ..models.user_model import User
+from ..models.user_model import db, User
 
 class UserRepository:
     """
-    用户数据仓储类
+    用户数据仓储类 - 数据库版本
     
     对比SpringBoot:
     Flask UserRepository ↔ SpringBoot JpaRepository<User, Long>
-    手动文件操作 ↔ 自动SQL生成
-    JSON文件存储 ↔ 数据库表存储
+    SQLAlchemy ORM ↔ Hibernate ORM
+    手动查询构建 ↔ 自动SQL生成
     
     职责：
     1. 用户数据的CRUD操作
-    2. 数据持久化到文件
+    2. 数据持久化到数据库
     3. 数据查询和过滤
-    4. 数据完整性保证
+    4. 事务管理
     """
     
-    def __init__(self, data_file_path: Optional[str] = None):
-        """
-        初始化Repository
-        
-        Args:
-            data_file_path: 数据文件路径，默认为backend/data/users.json
-        """
-        if data_file_path is None:
-            # 确保data目录存在
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            backend_dir = os.path.dirname(current_dir)
-            data_dir = os.path.join(backend_dir, 'data')
-            os.makedirs(data_dir, exist_ok=True)
-            data_file_path = os.path.join(data_dir, 'users.json')
-        
-        self.data_file_path = data_file_path
-        self._ensure_data_file_exists()
-    
-    def _ensure_data_file_exists(self) -> None:
-        """确保数据文件存在"""
-        if not os.path.exists(self.data_file_path):
-            self._save_data([])
-    
-    def _load_data(self) -> List[Dict[str, Any]]:
-        """
-        从文件加载数据
-        
-        Returns:
-            用户数据列表
-        """
-        try:
-            with open(self.data_file_path, 'r', encoding='utf-8') as file:
-                data = json.load(file)
-                return data if isinstance(data, list) else []
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"⚠️ 数据文件读取错误: {e}")
-            return []
-    
-    def _save_data(self, data: List[Dict[str, Any]]) -> None:
-        """
-        保存数据到文件
-        
-        Args:
-            data: 要保存的用户数据列表
-        """
-        try:
-            # 确保目录存在
-            os.makedirs(os.path.dirname(self.data_file_path), exist_ok=True)
-            
-            with open(self.data_file_path, 'w', encoding='utf-8') as file:
-                json.dump(data, file, ensure_ascii=False, indent=2)
-        except Exception as e:
-            raise RuntimeError(f"数据保存失败: {e}")
-    
-    def _get_next_id(self, users: List[Dict[str, Any]]) -> int:
-        """
-        获取下一个可用的ID
-        
-        Args:
-            users: 现有用户列表
-            
-        Returns:
-            下一个ID
-        """
-        if not users:
-            return 1
-        
-        max_id = max(user.get('id', 0) for user in users)
-        return max_id + 1
+    def __init__(self):
+        """初始化Repository"""
+        pass
     
     # ============================================
     # CRUD操作 - Create, Read, Update, Delete
@@ -122,46 +54,52 @@ class UserRepository:
             RuntimeError: 保存操作失败
         """
         # 验证用户数据
-        if not user.is_valid():
-            errors = user.get_validation_errors()
+        errors = user.validate()
+        if errors:
             raise ValueError(f"用户数据无效: {'; '.join(errors)}")
         
-        users = self._load_data()
-        
-        # 更新时间
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        if user.id is None:
-            # 新增用户
-            user.id = self._get_next_id(users)
-            # 直接设置时间字段，因为User模型中的时间是字符串类型
-            user_dict = user.to_dict(include_sensitive=True)
-            user_dict['created_at'] = now
-            user_dict['updated_at'] = now
-            users.append(user_dict)
-            # 更新User对象的内部状态
-            user = User.from_dict(user_dict)
-        else:
-            # 更新现有用户
-            user_dict = user.to_dict(include_sensitive=True)
-            user_dict['updated_at'] = now
+        try:
+            if user.id is None:
+                # 新增用户
+                db.session.add(user)
+            else:
+                # 更新现有用户 - SQLAlchemy会自动检测变更
+                pass
             
-            # 查找并更新
-            updated = False
-            for i, existing_user in enumerate(users):
-                if existing_user.get('id') == user.id:
-                    # 保留原始创建时间
-                    user_dict['created_at'] = existing_user.get('created_at')
-                    users[i] = user_dict
-                    updated = True
-                    break
-            
-            if not updated:
-                raise ValueError(f"用户ID {user.id} 不存在")
-        
-        self._save_data(users)
-        return user
+            db.session.commit()
+            return user
+        except Exception as e:
+            db.session.rollback()
+            raise RuntimeError(f"用户保存失败: {e}")
     
+    def update_user(self, user_id: int, update_data: Dict[str, Any]) -> Optional[User]:
+            """
+            更新用户数据
+            
+            Args:
+                user_id: 用户ID
+                update_data: 要更新的数据
+                
+            Returns:
+                更新后的用户对象，未找到返回None
+            """
+            try:
+                user = self.find_by_id(user_id)
+                if user:
+                    user.update_from_dict(update_data)
+                    
+                    # 验证更新后的数据
+                    errors = user.validate()
+                    if errors:
+                        raise ValueError(f"更新数据无效: {'; '.join(errors)}")
+                    
+                    db.session.commit()
+                    return user
+                return None
+            except Exception as e:
+                db.session.rollback()
+                raise RuntimeError(f"用户更新失败: {e}")
+
     def find_by_id(self, user_id: int) -> Optional[User]:
         """
         根据ID查找用户
@@ -174,13 +112,7 @@ class UserRepository:
         Returns:
             找到的用户对象，未找到返回None
         """
-        users = self._load_data()
-        
-        for user_data in users:
-            if user_data.get('id') == user_id:
-                return User.from_dict(user_data)
-        
-        return None
+        return User.find_by_id(user_id)
     
     def find_by_username(self, username: str) -> Optional[User]:
         """
@@ -194,13 +126,7 @@ class UserRepository:
         Returns:
             找到的用户对象，未找到返回None
         """
-        users = self._load_data()
-        
-        for user_data in users:
-            if user_data.get('username') == username:
-                return User.from_dict(user_data)
-        
-        return None
+        return User.find_by_username(username)
     
     def find_by_email(self, email: str) -> Optional[User]:
         """
@@ -212,13 +138,7 @@ class UserRepository:
         Returns:
             找到的用户对象，未找到返回None
         """
-        users = self._load_data()
-        
-        for user_data in users:
-            if user_data.get('email') == email:
-                return User.from_dict(user_data)
-        
-        return None
+        return User.find_by_email(email)
     
     def find_all(self) -> List[User]:
         """
@@ -229,8 +149,7 @@ class UserRepository:
         Returns:
             所有用户对象列表
         """
-        users = self._load_data()
-        return [User.from_dict(user_data) for user_data in users]
+        return User.get_all_users()
     
     def find_by_status(self, status: str) -> List[User]:
         """
@@ -242,14 +161,7 @@ class UserRepository:
         Returns:
             指定状态的用户列表
         """
-        users = self._load_data()
-        result = []
-        
-        for user_data in users:
-            if user_data.get('status') == status:
-                result.append(User.from_dict(user_data))
-        
-        return result
+        return User.query.filter_by(status=status).all()
     
     def exists_by_username(self, username: str) -> bool:
         """
@@ -263,7 +175,7 @@ class UserRepository:
         Returns:
             True如果用户名已存在，否则False
         """
-        return self.find_by_username(username) is not None
+        return User.query.filter_by(username=username).first() is not None
     
     def exists_by_email(self, email: str) -> bool:
         """
@@ -275,7 +187,7 @@ class UserRepository:
         Returns:
             True如果邮箱已存在，否则False
         """
-        return self.find_by_email(email) is not None
+        return User.query.filter_by(email=email).first() is not None
     
     def delete_by_id(self, user_id: int) -> bool:
         """
@@ -289,15 +201,16 @@ class UserRepository:
         Returns:
             True如果删除成功，False如果用户不存在
         """
-        users = self._load_data()
-        
-        for i, user_data in enumerate(users):
-            if user_data.get('id') == user_id:
-                del users[i]
-                self._save_data(users)
+        try:
+            user = self.find_by_id(user_id)
+            if user:
+                db.session.delete(user)
+                db.session.commit()
                 return True
-        
-        return False
+            return False
+        except Exception as e:
+            db.session.rollback()
+            raise RuntimeError(f"用户删除失败: {e}")
     
     def count(self) -> int:
         """
@@ -308,8 +221,7 @@ class UserRepository:
         Returns:
             用户总数
         """
-        users = self._load_data()
-        return len(users)
+        return User.count_users()
     
     def count_by_status(self, status: str) -> int:
         """
@@ -321,8 +233,7 @@ class UserRepository:
         Returns:
             指定状态的用户数量
         """
-        users = self._load_data()
-        return sum(1 for user in users if user.get('status') == status)
+        return User.query.filter_by(status=status).count()
     
     # ============================================
     # 高级查询方法
@@ -338,20 +249,11 @@ class UserRepository:
         Returns:
             符合条件的用户列表
         """
-        users = self._load_data()
-        result = []
-        
-        for user_data in users:
-            match = True
-            for key, value in criteria.items():
-                if user_data.get(key) != value:
-                    match = False
-                    break
-            
-            if match:
-                result.append(User.from_dict(user_data))
-        
-        return result
+        query = User.query
+        for key, value in criteria.items():
+            if hasattr(User, key):
+                query = query.filter(getattr(User, key) == value)
+        return query.all()
     
     def find_recent_users(self, days: int = 7) -> List[User]:
         """
@@ -363,22 +265,66 @@ class UserRepository:
         Returns:
             最近注册的用户列表
         """
-        users = self._load_data()
-        recent_users = []
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        return User.query.filter(User.created_at >= cutoff_date).all()
+    
+    def find_users_with_pagination(self, page: int = 1, per_page: int = 10) -> Dict[str, Any]:
+        """
+        分页查询用户
         
-        cutoff_date = datetime.now() - timedelta(days=days)
+        Args:
+            page: 页码（从1开始）
+            per_page: 每页数量
+            
+        Returns:
+            包含用户列表和分页信息的字典
+        """
+        pagination = User.query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
         
-        for user_data in users:
-            created_at = user_data.get('created_at')
-            if created_at:
-                try:
-                    created_date = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
-                    if created_date >= cutoff_date:
-                        recent_users.append(User.from_dict(user_data))
-                except ValueError:
-                    continue
+        return {
+            'users': pagination.items,
+            'total': pagination.total,
+            'pages': pagination.pages,
+            'current_page': pagination.page,
+            'per_page': pagination.per_page,
+            'has_next': pagination.has_next,
+            'has_prev': pagination.has_prev
+        }
+    
+    # ============================================
+    # 事务管理方法
+    # ============================================
+    
+    def save_batch(self, users: List[User]) -> List[User]:
+        """
+        批量保存用户
         
-        return recent_users
+        Args:
+            users: 要保存的用户列表
+            
+        Returns:
+            保存后的用户列表
+        """
+        try:
+            for user in users:
+                # 验证每个用户
+                errors = user.validate()
+                if errors:
+                    raise ValueError(f"用户 {user.username} 数据无效: {'; '.join(errors)}")
+                
+                if user.id is None:
+                    db.session.add(user)
+            
+            db.session.commit()
+            return users
+        except Exception as e:
+            db.session.rollback()
+            raise RuntimeError(f"批量保存失败: {e}")
+    
     
     # ============================================
     # 数据库管理方法
@@ -388,49 +334,12 @@ class UserRepository:
         """
         清空所有用户数据（慎用！）
         """
-        self._save_data([])
-    
-    def backup_data(self, backup_path: Optional[str] = None) -> str:
-        """
-        备份用户数据
-        
-        Args:
-            backup_path: 备份文件路径
-            
-        Returns:
-            实际的备份文件路径
-        """
-        if backup_path is None:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            backup_dir = os.path.dirname(self.data_file_path)
-            backup_path = os.path.join(backup_dir, f'users_backup_{timestamp}.json')
-        
-        users = self._load_data()
-        
         try:
-            with open(backup_path, 'w', encoding='utf-8') as file:
-                json.dump(users, file, ensure_ascii=False, indent=2)
-            return backup_path
+            User.query.delete()
+            db.session.commit()
         except Exception as e:
-            raise RuntimeError(f"数据备份失败: {e}")
-    
-    def restore_data(self, backup_path: str) -> None:
-        """
-        从备份恢复数据
-        
-        Args:
-            backup_path: 备份文件路径
-        """
-        try:
-            with open(backup_path, 'r', encoding='utf-8') as file:
-                backup_data = json.load(file)
-            
-            if not isinstance(backup_data, list):
-                raise ValueError("备份文件格式无效")
-            
-            self._save_data(backup_data)
-        except Exception as e:
-            raise RuntimeError(f"数据恢复失败: {e}")
+            db.session.rollback()
+            raise RuntimeError(f"清空数据失败: {e}")
     
     def get_statistics(self) -> Dict[str, Any]:
         """
@@ -439,16 +348,34 @@ class UserRepository:
         Returns:
             统计信息字典
         """
-        users = self._load_data()
+        total_users = self.count()
+        active_users = self.count_by_status('active')
+        inactive_users = self.count_by_status('inactive')
+        suspended_users = self.count_by_status('suspended')
         
         stats = {
-            'total_users': len(users),
-            'active_users': sum(1 for u in users if u.get('status') == 'active'),
-            'inactive_users': sum(1 for u in users if u.get('status') == 'inactive'),
-            'suspended_users': sum(1 for u in users if u.get('status') == 'suspended')
+            'total_users': total_users,
+            'active_users': active_users,
+            'inactive_users': inactive_users,
+            'suspended_users': suspended_users,
+            'status_distribution': {
+                'active': active_users,
+                'inactive': inactive_users,
+                'suspended': suspended_users
+            }
+        }
+        
+        # 计算最近注册统计
+        recent_7_days = len(self.find_recent_users(7))
+        recent_30_days = len(self.find_recent_users(30))
+        
+        stats['recent_registrations'] = {
+            '7_days': recent_7_days,
+            '30_days': recent_30_days
         }
         
         return stats
+    
 
 # ============================================
 # Repository实例（单例模式）
@@ -469,4 +396,4 @@ def get_user_repository() -> UserRepository:
         _default_user_repository = UserRepository()
     return _default_user_repository
 
-print(f"🗄️ UserRepository loaded - 用户数据持久化功能已就绪！")
+print(f"🗄️ UserRepository loaded - 数据库持久化功能已就绪！")

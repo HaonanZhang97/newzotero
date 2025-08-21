@@ -1,12 +1,12 @@
 """
-第6步：用户数据模型层(User Model)
-===============================
+第8步：用户数据模型层(User Model) - SQLAlchemy集成
+====================================================
 
 学习目标：
-- 什么是Model层/Entity层
-- 数据模型的定义和验证
-- 数据传输对象(DTO)的使用
-- 与SpringBoot Entity的对比
+- SQLAlchemy ORM模型定义
+- 数据库表映射和关系
+- 模型方法和属性
+- DTO与ORM模型的转换
 """
 
 from dataclasses import dataclass, field
@@ -15,86 +15,103 @@ from datetime import datetime
 import re
 import json
 
+# SQLAlchemy imports
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy.sql import func
+
+# 创建SQLAlchemy实例
+db = SQLAlchemy()
+
 # ============================================
-# 第6步：用户数据模型
+# 第8步：SQLAlchemy用户模型
 # ============================================
 
-@dataclass
-class User:
+class User(db.Model):
     """
-    用户实体模型 (Entity)
+    SQLAlchemy用户模型 (ORM Entity)
     
     对比SpringBoot:
-    Flask @dataclass User ↔ SpringBoot @Entity User
-    手动验证方法 ↔ @Valid 注解验证
-    手动字段定义 ↔ JPA 注解映射
+    Flask SQLAlchemy User ↔ SpringBoot @Entity User
+    db.Model继承 ↔ JpaRepository<User, Long>
+    Column定义 ↔ @Column注解
     
     职责：
-    1. 定义用户数据结构
-    2. 数据序列化/反序列化
-    3. 基础数据验证
-    4. 数据格式转换
+    1. 定义数据库表结构
+    2. ORM映射和关系
+    3. 数据库操作方法
+    4. 业务逻辑方法
     """
     
-    # ============================================
-    # 实体字段定义
-    # ============================================
-    id: Optional[int] = None
-    username: str = ""
-    email: str = ""
-    password_hash: Optional[str] = None
-    full_name: Optional[str] = None
-    status: str = "active"  # active, inactive, suspended
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    last_login: Optional[str] = None
+    __tablename__ = 'users'
     
-    # 计算字段 (不存储在数据库)
-    _validation_errors: List[str] = field(default_factory=list, init=False)
+    # ============================================
+    # 表字段定义
+    # ============================================
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(255), nullable=True)  # 暂时允许为空，后续添加密码功能
+    full_name = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(20), nullable=False, default='active')
     
-    def __post_init__(self):
-        """初始化后处理 - 设置默认值"""
-        if not self.created_at:
-            self.created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        if not self.updated_at:
-            self.updated_at = self.created_at
+    # 时间戳字段
+    created_at = db.Column(db.DateTime, nullable=False, default=func.now())
+    updated_at = db.Column(db.DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    last_login = db.Column(db.DateTime, nullable=True)
+    
+    def __init__(self, username: str, email: str, **kwargs):
+        """初始化用户实例"""
+        self.username = username
+        self.email = email
+        self.password_hash = kwargs.get('password_hash')
+        self.full_name = kwargs.get('full_name')
+        self.status = kwargs.get('status', 'active')
+    
+    def __repr__(self):
+        """字符串表示"""
+        return f'<User {self.username}>'
     
     # ============================================
     # 数据验证方法
     # ============================================
     
-    def is_valid(self) -> bool:
-        """验证实体数据是否有效"""
-        self._validation_errors.clear()
-        
-        # ID验证
-        if self.id is not None and self.id <= 0:
-            self._validation_errors.append("ID必须是正整数")
+    def validate(self) -> List[str]:
+        """验证用户数据，返回错误列表"""
+        errors = []
         
         # 用户名验证
         if not self.username:
-            self._validation_errors.append("用户名不能为空")
+            errors.append("用户名不能为空")
         elif len(self.username) < 3:
-            self._validation_errors.append("用户名至少3个字符")
+            errors.append("用户名至少3个字符")
+        elif len(self.username) > 50:
+            errors.append("用户名最多50个字符")
         elif not re.match(r'^[a-zA-Z0-9_]+$', self.username):
-            self._validation_errors.append("用户名只能包含字母、数字和下划线")
+            errors.append("用户名只能包含字母、数字和下划线")
         
         # 邮箱验证
         if not self.email:
-            self._validation_errors.append("邮箱不能为空")
+            errors.append("邮箱不能为空")
+        elif len(self.email) > 100:
+            errors.append("邮箱最多100个字符")
         elif not re.match(r'^[^@]+@[^@]+\.[^@]+$', self.email):
-            self._validation_errors.append("邮箱格式不正确")
+            errors.append("邮箱格式不正确")
         
         # 状态验证
         valid_statuses = ["active", "inactive", "suspended"]
         if self.status not in valid_statuses:
-            self._validation_errors.append(f"状态必须是: {', '.join(valid_statuses)}")
+            errors.append(f"状态必须是: {', '.join(valid_statuses)}")
         
-        return len(self._validation_errors) == 0
+        # 全名验证
+        if self.full_name and len(self.full_name) > 100:
+            errors.append("全名最多100个字符")
+        
+        return errors
     
-    def get_validation_errors(self) -> List[str]:
-        """获取验证错误列表"""
-        return self._validation_errors.copy()
+    def is_valid(self) -> bool:
+        """检查用户数据是否有效"""
+        return len(self.validate()) == 0
     
     # ============================================
     # 数据转换方法
@@ -113,9 +130,9 @@ class User:
             'email': self.email,
             'full_name': self.full_name,
             'status': self.status,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'last_login': self.last_login
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'last_login': self.last_login.isoformat() if self.last_login else None
         }
         
         if include_sensitive:
@@ -127,21 +144,6 @@ class User:
     def to_json(self, include_sensitive: bool = False) -> str:
         """转换为JSON字符串"""
         return json.dumps(self.to_dict(include_sensitive), ensure_ascii=False, indent=2)
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'User':
-        """从字典创建User实例"""
-        return cls(
-            id=data.get('id'),
-            username=data.get('username', ''),
-            email=data.get('email', ''),
-            password_hash=data.get('password_hash'),
-            full_name=data.get('full_name'),
-            status=data.get('status', 'active'),
-            created_at=data.get('created_at'),
-            updated_at=data.get('updated_at'),
-            last_login=data.get('last_login')
-        )
     
     # ============================================
     # 业务方法
@@ -159,8 +161,55 @@ class User:
     
     def update_login_time(self):
         """更新最后登录时间"""
-        self.last_login = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self.updated_at = self.last_login
+        self.last_login = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+    
+    def update_from_dict(self, data: Dict[str, Any]):
+        """从字典更新用户数据"""
+        for key, value in data.items():
+            if hasattr(self, key) and key not in ['id', 'created_at']:
+                setattr(self, key, value)
+        self.updated_at = datetime.utcnow()
+    
+    # ============================================
+    # 类方法 (相当于Repository的部分功能)
+    # ============================================
+    
+    @classmethod
+    def create_from_dict(cls, data: Dict[str, Any]) -> 'User':
+        """从字典创建用户实例"""
+        return cls(
+            username=data['username'],
+            email=data['email'],
+            password_hash=data.get('password_hash'),
+            full_name=data.get('full_name'),
+            status=data.get('status', 'active')
+        )
+    
+    @classmethod
+    def find_by_username(cls, username: str) -> Optional['User']:
+        """根据用户名查找用户"""
+        return cls.query.filter_by(username=username).first()
+    
+    @classmethod
+    def find_by_email(cls, email: str) -> Optional['User']:
+        """根据邮箱查找用户"""
+        return cls.query.filter_by(email=email).first()
+    
+    @classmethod
+    def find_by_id(cls, user_id: int) -> Optional['User']:
+        """根据ID查找用户"""
+        return cls.query.get(user_id)
+    
+    @classmethod
+    def get_all_users(cls) -> List['User']:
+        """获取所有用户"""
+        return cls.query.all()
+    
+    @classmethod
+    def count_users(cls) -> int:
+        """获取用户总数"""
+        return cls.query.count()
 
 # ============================================
 # 第6步：数据传输对象 (DTO)
