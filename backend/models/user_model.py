@@ -172,7 +172,7 @@ class User(db.Model):
         self.updated_at = datetime.utcnow()
     
     # ============================================
-    # 类方法 (相当于Repository的部分功能)
+    # 类方法 (业务逻辑和实例创建)
     # ============================================
     
     @classmethod
@@ -185,31 +185,6 @@ class User(db.Model):
             full_name=data.get('full_name'),
             status=data.get('status', 'active')
         )
-    
-    @classmethod
-    def find_by_username(cls, username: str) -> Optional['User']:
-        """根据用户名查找用户"""
-        return cls.query.filter_by(username=username).first()
-    
-    @classmethod
-    def find_by_email(cls, email: str) -> Optional['User']:
-        """根据邮箱查找用户"""
-        return cls.query.filter_by(email=email).first()
-    
-    @classmethod
-    def find_by_id(cls, user_id: int) -> Optional['User']:
-        """根据ID查找用户"""
-        return cls.query.get(user_id)
-    
-    @classmethod
-    def get_all_users(cls) -> List['User']:
-        """获取所有用户"""
-        return cls.query.all()
-    
-    @classmethod
-    def count_users(cls) -> int:
-        """获取用户总数"""
-        return cls.query.count()
 
 # ============================================
 # 第6步：数据传输对象 (DTO)

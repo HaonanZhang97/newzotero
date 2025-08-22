@@ -107,12 +107,12 @@ class UserRepository:
         对比SpringBoot: findById() ↔ JpaRepository.findById()
         
         Args:
-            user_id: 用户ID
-            
+        user_id: 用户ID
+        
         Returns:
             找到的用户对象，未找到返回None
         """
-        return User.find_by_id(user_id)
+        return User.query.get(user_id)
     
     def find_by_username(self, username: str) -> Optional[User]:
         """
@@ -126,7 +126,7 @@ class UserRepository:
         Returns:
             找到的用户对象，未找到返回None
         """
-        return User.find_by_username(username)
+        return User.query.filter_by(username=username).first()
     
     def find_by_email(self, email: str) -> Optional[User]:
         """
@@ -138,7 +138,7 @@ class UserRepository:
         Returns:
             找到的用户对象，未找到返回None
         """
-        return User.find_by_email(email)
+        return User.query.filter_by(email=email).first()
     
     def find_all(self) -> List[User]:
         """
@@ -149,7 +149,7 @@ class UserRepository:
         Returns:
             所有用户对象列表
         """
-        return User.get_all_users()
+        return User.query.all()
     
     def find_by_status(self, status: str) -> List[User]:
         """
@@ -221,7 +221,7 @@ class UserRepository:
         Returns:
             用户总数
         """
-        return User.count_users()
+        return User.query.count()
     
     def count_by_status(self, status: str) -> int:
         """
@@ -265,7 +265,7 @@ class UserRepository:
         Returns:
             最近注册的用户列表
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now() - timedelta(days=days)
         return User.query.filter(User.created_at >= cutoff_date).all()
     
     def find_users_with_pagination(self, page: int = 1, per_page: int = 10) -> Dict[str, Any]:

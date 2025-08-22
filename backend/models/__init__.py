@@ -3,15 +3,18 @@ Models 模块初始化
 ================
 
 第6步：数据模型层(Model Layer / Entity Layer)
+第9步：项目模型层(Project Model Layer)
 """
 
 from .user_model import User, UserCreateRequest, UserUpdateRequest
+from .project_model import Project
 
-# 第6步：可用的 Model 类
+# 第6步+第9步：可用的 Model 类
 __all__ = [
     'User',
     'UserCreateRequest', 
     'UserUpdateRequest',
+    'Project',
 ]
 
 # 第7步将解锁的 Model（暂时注释）
