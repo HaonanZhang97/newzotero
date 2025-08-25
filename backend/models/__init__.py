@@ -7,14 +7,16 @@ Models 模块初始化
 """
 
 from .user_model import User, UserCreateRequest, UserUpdateRequest
-from .project_model import Project
+from .project_model import Project, ProjectCreateRequest, ProjectUpdateRequest
 
-# 第6步+第9步：可用的 Model 类
+# 第6步+第9步+第11步：可用的 Model 类
 __all__ = [
     'User',
     'UserCreateRequest', 
     'UserUpdateRequest',
     'Project',
+    'ProjectCreateRequest',
+    'ProjectUpdateRequest',
 ]
 
 # 第7步将解锁的 Model（暂时注释）

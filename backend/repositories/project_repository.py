@@ -232,7 +232,7 @@ class ProjectRepository:
                 - status: 项目状态
                 - priority: 优先级
                 - name_like: 项目名模糊查询
-                - is_public: 是否公开
+                # - is_public: 是否公开  # 暂时不支持公开功能
                 - created_after: 创建时间之后
                 - created_before: 创建时间之前
                 - deadline_before: 截止时间之前
@@ -346,21 +346,46 @@ class ProjectRepository:
             raise RuntimeError(f"获取用户项目失败: {e}")
 
     def find_with_pagination(self, user_id: int, page: int = 1, 
-                           per_page: int = 10) -> Tuple[List[Project], int, int]:
+                           per_page: int = 10, sort_by: str = 'created_at',
+                           sort_order: str = 'desc') -> Tuple[List[Project], int, int]:
         """
-        分页查询用户项目
+        分页查询用户项目（支持排序）
         
         Args:
             user_id: 用户ID
             page: 页码（从1开始）
             per_page: 每页数量
+            sort_by: 排序字段 ('created_at', 'updated_at', 'name', 'priority', 'deadline')
+            sort_order: 排序方向 ('asc' 或 'desc')
             
         Returns:
             (项目列表, 总数量, 总页数)
         """
         try:
+            # 先筛选用户的项目
+            query = Project.query.filter_by(user_id=user_id)
+            
+            # 根据字段名获取对应的列对象
+            if sort_by == 'updated_at':
+                sort_column = Project.updated_at
+            elif sort_by == 'name':
+                sort_column = Project.name
+            elif sort_by == 'priority':
+                sort_column = Project.priority
+            elif sort_by == 'deadline':
+                sort_column = Project.deadline
+            else:
+                # 默认按创建时间排序
+                sort_column = Project.created_at
+            
+            # 根据排序方向应用排序
+            if sort_order == 'asc':
+                query = query.order_by(asc(sort_column))  # type: ignore
+            else:
+                query = query.order_by(desc(sort_column))  # type: ignore
+            
             # SQLAlchemy 的分页查询
-            pagination = Project.query.filter_by(user_id=user_id).paginate(
+            pagination = query.paginate(
                 page=page,
                 per_page=per_page,
                 error_out=False  # 页码超出范围时不抛错，返回空列表
@@ -491,9 +516,13 @@ class ProjectRepository:
             公开项目列表
         """
         try:
-            projects = Project.query.filter_by(is_public=True).order_by(
-                Project.created_at.desc()  # type: ignore
-            ).limit(limit).all()  # type: ignore
+            # TODO: 暂时不支持公开项目功能，等 is_public 字段启用后再实现
+            # projects = Project.query.filter_by(is_public=True).order_by(
+            #     Project.created_at.desc()  # type: ignore
+            # ).limit(limit).all()  # type: ignore
+            
+            # 暂时返回空列表
+            projects = []
             
             return projects
             

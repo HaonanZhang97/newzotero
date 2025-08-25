@@ -250,7 +250,8 @@ class Project(db.Model):
         updatable_fields = [
             'name', 'description', 'status', 'priority', 
             'start_date', 'end_date', 'deadline', 
-            'is_public', 'color'
+            # 'is_public',  # 暂时不支持公开功能
+            'color'
         ]
         
         for key, value in data.items():
@@ -291,9 +292,278 @@ class Project(db.Model):
             start_date=data.get('start_date'),
             end_date=data.get('end_date'),
             deadline=data.get('deadline'),
-            is_public=data.get('is_public', False),
+            # is_public=data.get('is_public', False),  # 暂时不支持公开功能
             color=data.get('color', '#4CAF50')
         )
+
+# ============================================
+# 第11步：项目数据传输对象 (DTO)
+# ============================================
+
+@dataclass
+class ProjectCreateRequest:
+    """
+    项目创建请求DTO
+    
+    对比SpringBoot:
+    Flask ProjectCreateRequest ↔ SpringBoot ProjectCreateDto
+    手动验证 ↔ @Valid + @NotNull等注解
+    
+    职责：
+    1. 定义创建项目需要的数据结构
+    2. 请求数据验证
+    3. 数据清理和格式化
+    4. 业务规则验证
+    """
+    
+    name: str = ""
+    description: Optional[str] = None
+    user_id: int = 0
+    priority: int = 1
+    status: str = "active"
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    deadline: Optional[date] = None
+    color: str = "#4CAF50"
+    
+    def __init__(self, data: Dict[str, Any]):
+        """从请求数据初始化"""
+        self.name = str(data.get('name', '')).strip()
+        self.description = data.get('description', '').strip() if data.get('description') else None
+        self.user_id = int(data.get('user_id', 0))
+        self.priority = int(data.get('priority', 1))
+        self.status = str(data.get('status', 'active')).strip()
+        self.color = str(data.get('color', '#4CAF50')).strip()
+        
+        # 日期字段处理
+        self.start_date = self._parse_date(data.get('start_date'))
+        self.end_date = self._parse_date(data.get('end_date'))
+        self.deadline = self._parse_date(data.get('deadline'))
+        
+        # 清理空字符串
+        if self.description == '':
+            self.description = None
+    
+    def _parse_date(self, date_str: Any) -> Optional[date]:
+        """解析日期字符串"""
+        if not date_str:
+            return None
+        
+        if isinstance(date_str, date):
+            return date_str
+        
+        if isinstance(date_str, str):
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S').date()
+                except ValueError:
+                    return None
+        
+        return None
+    
+    def validate(self) -> None:
+        """验证请求数据 - 抛出异常如果无效"""
+        errors = []
+        
+        # 项目名验证
+        if not self.name:
+            errors.append("项目名不能为空")
+        elif len(self.name) < 2:
+            errors.append("项目名至少2个字符")
+        elif len(self.name) > 200:
+            errors.append("项目名最多200个字符")
+        
+        # 用户ID验证
+        if not self.user_id:
+            errors.append("必须指定项目所属用户")
+        elif self.user_id <= 0:
+            errors.append("用户ID必须是正整数")
+        
+        # 状态验证
+        valid_statuses = ["active", "completed", "archived", "paused"]
+        if self.status not in valid_statuses:
+            errors.append(f"项目状态必须是: {', '.join(valid_statuses)}")
+        
+        # 优先级验证
+        if not isinstance(self.priority, int) or self.priority < 1 or self.priority > 5:
+            errors.append("优先级必须是1-5之间的整数")
+        
+        # 描述长度验证
+        if self.description and len(self.description) > 2000:
+            errors.append("项目描述最多2000个字符")
+        
+        # 颜色验证
+        if self.color and not re.match(r'^#[0-9A-Fa-f]{6}$', self.color):
+            errors.append("颜色必须是有效的十六进制格式，如#4CAF50")
+        
+        # 日期逻辑验证
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            errors.append("开始日期不能晚于结束日期")
+        
+        if self.deadline and self.start_date and self.deadline < self.start_date:
+            errors.append("截止日期不能早于开始日期")
+        
+        if errors:
+            raise ValueError(f"数据验证失败: {'; '.join(errors)}")
+    
+    def to_project_dict(self) -> Dict[str, Any]:
+        """转换为创建Project实体所需的数据"""
+        result = {
+            'name': self.name,
+            'user_id': self.user_id,
+            'status': self.status,
+            'priority': self.priority,
+            'color': self.color
+        }
+        
+        if self.description:
+            result['description'] = self.description
+        if self.start_date:
+            result['start_date'] = self.start_date
+        if self.end_date:
+            result['end_date'] = self.end_date
+        if self.deadline:
+            result['deadline'] = self.deadline
+        
+        return result
+
+
+@dataclass
+class ProjectUpdateRequest:
+    """
+    项目更新请求DTO
+    
+    职责：
+    1. 定义更新项目需要的数据结构
+    2. 部分更新字段验证
+    3. 只更新提供的字段
+    """
+    
+    name: Optional[str] = None
+    description: Optional[str] = None
+    priority: Optional[int] = None
+    status: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    deadline: Optional[date] = None
+    color: Optional[str] = None
+    
+    def __init__(self, data: Dict[str, Any]):
+        """从请求数据初始化 - 只处理提供的字段"""
+        if 'name' in data:
+            self.name = str(data['name']).strip()
+        
+        if 'description' in data:
+            desc = str(data['description']).strip() if data['description'] else None
+            self.description = desc if desc else None
+        
+        if 'priority' in data:
+            self.priority = int(data['priority'])
+        
+        if 'status' in data:
+            self.status = str(data['status']).strip()
+        
+        if 'color' in data:
+            self.color = str(data['color']).strip()
+        
+        # 日期字段处理
+        if 'start_date' in data:
+            self.start_date = self._parse_date(data['start_date'])
+        
+        if 'end_date' in data:
+            self.end_date = self._parse_date(data['end_date'])
+        
+        if 'deadline' in data:
+            self.deadline = self._parse_date(data['deadline'])
+    
+    def _parse_date(self, date_str: Any) -> Optional[date]:
+        """解析日期字符串"""
+        if not date_str:
+            return None
+        
+        if isinstance(date_str, date):
+            return date_str
+        
+        if isinstance(date_str, str):
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S').date()
+                except ValueError:
+                    return None
+        
+        return None
+    
+    def validate(self) -> None:
+        """验证更新数据"""
+        errors = []
+        
+        # 项目名验证（如果提供）
+        if self.name is not None:
+            if not self.name:
+                errors.append("项目名不能为空")
+            elif len(self.name) < 2:
+                errors.append("项目名至少2个字符")
+            elif len(self.name) > 200:
+                errors.append("项目名最多200个字符")
+        
+        # 状态验证（如果提供）
+        if self.status is not None:
+            valid_statuses = ["active", "completed", "archived", "paused"]
+            if self.status not in valid_statuses:
+                errors.append(f"项目状态必须是: {', '.join(valid_statuses)}")
+        
+        # 优先级验证（如果提供）
+        if self.priority is not None:
+            if not isinstance(self.priority, int) or self.priority < 1 or self.priority > 5:
+                errors.append("优先级必须是1-5之间的整数")
+        
+        # 描述长度验证（如果提供）
+        if self.description is not None and len(self.description) > 2000:
+            errors.append("项目描述最多2000个字符")
+        
+        # 颜色验证（如果提供）
+        if self.color is not None and not re.match(r'^#[0-9A-Fa-f]{6}$', self.color):
+            errors.append("颜色必须是有效的十六进制格式，如#4CAF50")
+        
+        # 日期逻辑验证
+        # 注意：这里只能验证当前提供的字段，完整的日期逻辑需要在Service层结合现有数据验证
+        if (self.start_date is not None and self.end_date is not None and 
+            self.start_date > self.end_date):
+            errors.append("开始日期不能晚于结束日期")
+        
+        if (self.deadline is not None and self.start_date is not None and 
+            self.deadline < self.start_date):
+            errors.append("截止日期不能早于开始日期")
+        
+        if errors:
+            raise ValueError(f"数据验证失败: {'; '.join(errors)}")
+    
+    def to_update_dict(self) -> Dict[str, Any]:
+        """转换为更新数据字典 - 只包含非None字段"""
+        result = {}
+        
+        if self.name is not None:
+            result['name'] = self.name
+        if self.description is not None:
+            result['description'] = self.description
+        if self.priority is not None:
+            result['priority'] = self.priority
+        if self.status is not None:
+            result['status'] = self.status
+        if self.start_date is not None:
+            result['start_date'] = self.start_date
+        if self.end_date is not None:
+            result['end_date'] = self.end_date
+        if self.deadline is not None:
+            result['deadline'] = self.deadline
+        if self.color is not None:
+            result['color'] = self.color
+        
+        return result
 
 # ============================================
 # 第9步将要添加的功能（预留）
