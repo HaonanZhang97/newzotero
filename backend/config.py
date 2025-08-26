@@ -48,7 +48,10 @@ class Config:
         'pool_recycle': 300,    # 连接回收时间（秒）
     }
     
-    print("📋 Base Config class loaded")
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
+    JWT_ACCESS_TOKEN_EXPIRE = os.environ.get('JWT_ACCESS_TOKEN_EXPIRE', 12)
+    JWT_REFRESH_TOKEN_EXPIRE = os.environ.get('JWT_REFRESH_TOKEN_EXPIRE', 30)
 
 
 class DevelopmentConfig(Config):
