@@ -6,10 +6,12 @@ API 模块初始化
 """
 
 from .users import users_bp
+from .projects import projects_bp
 
 # 第4步：可用的 Blueprint 列表
 __all__ = [
     'users_bp',
+    'projects_bp',
 ]
 
 # 第5步将解锁的 Blueprint（暂时注释）

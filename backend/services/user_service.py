@@ -141,6 +141,7 @@ class UserService:
             update_request.validate()
             
             # 业务规则检查
+            # 检查邮箱重复性（如果更新了邮箱）
             if update_request.email and update_request.email != existing_user.email:
                 if service.user_repository.exists_by_email(update_request.email):
                     raise ValueError(f"邮箱 '{update_request.email}' 已存在")
